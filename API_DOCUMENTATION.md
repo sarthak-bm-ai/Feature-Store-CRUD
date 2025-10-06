@@ -1,9 +1,52 @@
 # Feature Store API Documentation
 
 ## Overview
-This Feature Store API provides CRUD operations for managing feature data across two DynamoDB tables with different partition keys:
+This Feature Store API provides **simplified CRUD operations** for managing feature data across two DynamoDB tables with different partition keys:
 - **`features_bright_uid`**: Partition key = `bright_uid`
 - **`features_account_id`**: Partition key = `account_id`
+
+### Key Features
+- **User-Friendly**: Simple JSON input, no metadata required
+- **Automatic Metadata**: System handles timestamps and metadata generation
+- **Smart Updates**: Preserves creation timestamps, updates modification times
+- **Flexible Reads**: Single or multiple categories with optional filtering
+- **Dual-Table Support**: Works with both `bright_uid` and `account_id` tables
+- **Full Monitoring**: StatsD metrics for all operations
+
+## Quick Start
+
+### Write Features (Simple)
+```bash
+curl -X POST "http://127.0.0.1:8000/items/user123?table_type=bright_uid" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "trans_features": {
+      "avg_credit_30d": 150.5,
+      "num_transactions": 25
+    },
+    "user_features": {
+      "age": 25,
+      "income": 50000
+    }
+  }'
+```
+
+### Read Single Category
+```bash
+curl "http://127.0.0.1:8000/get/item/user123/trans_features?table_type=bright_uid"
+```
+
+### Read Multiple Categories (Filtered)
+```bash
+curl -X POST "http://127.0.0.1:8000/get/item/user123?table_type=bright_uid" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "trans_features": ["avg_credit_30d"],
+    "user_features": ["age"]
+  }'
+```
+
+**That's it!** The system automatically handles all metadata and timestamps.
 
 ## Table of Contents
 1. [API Endpoints](#api-endpoints)
@@ -51,7 +94,7 @@ This Feature Store API provides CRUD operations for managing feature data across
 - `identifier` (path): User/account identifier
 - `table_type` (query, optional): `bright_uid` or `account_id` (default: `bright_uid`)
 
-**Request Body** (Simplified Format):
+**Request Body** (Simple Format - Recommended):
 ```json
 {
   "category1": {
@@ -64,24 +107,10 @@ This Feature Store API provides CRUD operations for managing feature data across
 }
 ```
 
-**Request Body** (Full Schema Format):
-```json
-{
-  "category1": {
-    "data": {
-      "feature1": "value1",
-      "feature2": 123.45
-    },
-    "metadata": {
-      "created_at": "2025-10-06T06:30:00",
-      "updated_at": "2025-10-06T06:30:00",
-      "source": "api",
-      "compute_id": "batch_job_001",
-      "ttl": 86400
-    }
-  }
-}
-```
+**Note**: The system automatically handles metadata generation. Users only need to provide simple feature data. The system will:
+- **New categories**: Set both `created_at` and `updated_at` to current time
+- **Existing categories**: Preserve `created_at`, update `updated_at` to current time
+- **Default metadata**: `source="api"`, `compute_id="None"`, `ttl="None"`
 
 ---
 
@@ -233,7 +262,7 @@ curl -X POST "http://127.0.0.1:8000/get/item/user123?table_type=bright_uid" \
 }
 ```
 
-### Example 4: Write with Simplified Format
+### Example 4: Write New Features (Simple Format)
 ```bash
 curl -X POST "http://127.0.0.1:8000/items/user123?table_type=bright_uid" \
   -H "Content-Type: application/json" \
@@ -269,26 +298,22 @@ curl -X POST "http://127.0.0.1:8000/items/user123?table_type=bright_uid" \
 }
 ```
 
-### Example 5: Write with Full Schema Format
+**Note**: The system automatically generates metadata with current timestamps for new categories.
+
+### Example 5: Update Existing Features
 ```bash
 curl -X POST "http://127.0.0.1:8000/items/user123?table_type=bright_uid" \
   -H "Content-Type: application/json" \
   -d '{
-    "user_features": {
-      "data": {
-        "age": 28,
-        "income": 75000
-      },
-      "metadata": {
-        "created_at": "2025-10-06T06:30:00",
-        "updated_at": "2025-10-06T06:30:00",
-        "source": "ml_pipeline",
-        "compute_id": "batch_job_001",
-        "ttl": 86400
-      }
+    "trans_features": {
+      "avg_credit_30d": 200.0,
+      "num_transactions": 30,
+      "new_feature": "value"
     }
   }'
 ```
+
+**Result**: `created_at` is preserved, `updated_at` is updated to current time.
 
 ---
 
@@ -346,7 +371,7 @@ curl -X POST "http://127.0.0.1:8000/get/item/user123" \
 
 ### Feature Data Structure
 
-#### Simplified Format (Auto-Metadata)
+#### User Input Format (Simple)
 ```json
 {
   "category_name": {
@@ -357,7 +382,7 @@ curl -X POST "http://127.0.0.1:8000/get/item/user123" \
 }
 ```
 
-#### Full Schema Format
+#### Internal Storage Format (Auto-Generated)
 ```json
 {
   "category_name": {
@@ -367,25 +392,43 @@ curl -X POST "http://127.0.0.1:8000/get/item/user123" \
       "feature3": true
     },
     "metadata": {
-      "created_at": "2025-10-06T06:30:00",
-      "updated_at": "2025-10-06T06:30:00",
+      "created_at": "2025-10-06T09:11:06.099812",
+      "updated_at": "2025-10-06T09:11:06.099812",
       "source": "api",
-      "compute_id": "batch_job_001",
-      "ttl": 86400
+      "compute_id": "None",
+      "ttl": "None"
     }
   }
 }
 ```
 
-### Metadata Fields
+**Note**: Users only provide the simple format. The system automatically wraps it in the internal format with metadata.
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `created_at` | string (ISO 8601) | Yes | Creation timestamp |
-| `updated_at` | string (ISO 8601) | Yes | Last update timestamp |
-| `source` | string | Yes | Data source (e.g., "api", "ml_pipeline") |
-| `compute_id` | string | No | Processing job identifier |
-| `ttl` | integer | No | Time-to-live in seconds |
+### Metadata Fields (Auto-Generated)
+
+| Field | Type | Auto-Generated | Description |
+|-------|------|----------------|-------------|
+| `created_at` | string (ISO 8601) | Yes | Creation timestamp (preserved on updates) |
+| `updated_at` | string (ISO 8601) | Yes | Last update timestamp (updated on every write) |
+| `source` | string | Yes | Default: "api" |
+| `compute_id` | string | Yes | Default: "None" |
+| `ttl` | string | Yes | Default: "None" |
+
+**Note**: All metadata fields are automatically generated. Users don't need to provide them.
+
+### Simplified API Benefits
+
+#### For Users
+- **Simple Input**: Just provide feature data, no metadata required
+- **Automatic Handling**: System manages timestamps and metadata
+- **Consistent Interface**: Same format for all operations
+- **No Learning Curve**: Intuitive JSON structure
+
+#### For System
+- **Audit Trail**: Automatic timestamp tracking
+- **Data Integrity**: Preserves creation timestamps on updates
+- **Extensible**: Easy to add new metadata fields later
+- **Monitoring**: Full StatsD metrics integration
 
 ### Supported Data Types
 
