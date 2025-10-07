@@ -17,7 +17,7 @@ This Feature Store API provides **simplified CRUD operations** for managing feat
 
 ### Write Features (Simple)
 ```bash
-curl -X POST "http://127.0.0.1:8000/items/user123?table_type=bright_uid" \
+curl -X POST "http://127.0.0.1:8000/api/v1/items/user123?table_type=bright_uid" \
   -H "Content-Type: application/json" \
   -d '{
     "trans_features": {
@@ -33,12 +33,12 @@ curl -X POST "http://127.0.0.1:8000/items/user123?table_type=bright_uid" \
 
 ### Read Single Category
 ```bash
-curl "http://127.0.0.1:8000/get/item/user123/trans_features?table_type=bright_uid"
+curl "http://127.0.0.1:8000/api/v1/get/item/user123/trans_features?table_type=bright_uid"
 ```
 
 ### Read Multiple Categories (Filtered)
 ```bash
-curl -X POST "http://127.0.0.1:8000/get/item/user123?table_type=bright_uid" \
+curl -X POST "http://127.0.0.1:8000/api/v1/get/item/user123?table_type=bright_uid" \
   -H "Content-Type: application/json" \
   -d '{
     "trans_features": ["avg_credit_30d"],
@@ -61,7 +61,7 @@ curl -X POST "http://127.0.0.1:8000/get/item/user123?table_type=bright_uid" \
 ## API Endpoints
 
 ### 1. Get Single Category Features
-**Endpoint**: `GET /get/item/{identifier}/{category}`
+**Endpoint**: `GET /api/v1/get/item/{identifier}/{category}`
 
 **Parameters**:
 - `identifier` (path): User/account identifier
@@ -71,7 +71,7 @@ curl -X POST "http://127.0.0.1:8000/get/item/user123?table_type=bright_uid" \
 **Response**: Full feature data for the category
 
 ### 2. Get Filtered Multi-Category Features
-**Endpoint**: `POST /get/item/{identifier}`
+**Endpoint**: `POST /api/v1/get/item/{identifier}`
 
 **Parameters**:
 - `identifier` (path): User/account identifier
@@ -88,7 +88,7 @@ curl -X POST "http://127.0.0.1:8000/get/item/user123?table_type=bright_uid" \
 **Response**: Filtered features from specified categories
 
 ### 3. Write/Update Features
-**Endpoint**: `POST /items/{identifier}`
+**Endpoint**: `POST /api/v1/items/{identifier}`
 
 **Parameters**:
 - `identifier` (path): User/account identifier
@@ -206,12 +206,12 @@ curl "http://127.0.0.1:8000/get/item/user123/trans_features"
 
 ### Example 2: Read with Table Type
 ```bash
-curl "http://127.0.0.1:8000/get/item/user123/trans_features?table_type=bright_uid"
+curl "http://127.0.0.1:8000/api/v1/get/item/user123/trans_features?table_type=bright_uid"
 ```
 
 ### Example 3: Filtered Multi-Category Read
 ```bash
-curl -X POST "http://127.0.0.1:8000/get/item/user123?table_type=bright_uid" \
+curl -X POST "http://127.0.0.1:8000/api/v1/get/item/user123?table_type=bright_uid" \
   -H "Content-Type: application/json" \
   -d '{
     "trans_features": ["avg_credit_30d"],
@@ -264,7 +264,7 @@ curl -X POST "http://127.0.0.1:8000/get/item/user123?table_type=bright_uid" \
 
 ### Example 4: Write New Features (Simple Format)
 ```bash
-curl -X POST "http://127.0.0.1:8000/items/user123?table_type=bright_uid" \
+curl -X POST "http://127.0.0.1:8000/api/v1/items/user123?table_type=bright_uid" \
   -H "Content-Type: application/json" \
   -d '{
     "trans_features": {
@@ -302,7 +302,7 @@ curl -X POST "http://127.0.0.1:8000/items/user123?table_type=bright_uid" \
 
 ### Example 5: Update Existing Features
 ```bash
-curl -X POST "http://127.0.0.1:8000/items/user123?table_type=bright_uid" \
+curl -X POST "http://127.0.0.1:8000/api/v1/items/user123?table_type=bright_uid" \
   -H "Content-Type: application/json" \
   -d '{
     "trans_features": {
