@@ -5,6 +5,7 @@ from core.settings import settings
 from core.logging_config import setup_logging, get_logger
 from middlewares.logging_middleware import setup_logging_middleware
 from middlewares.metrics_middleware import setup_metrics_middleware
+from middlewares.cors import setup_cors_middleware
 
 # Setup logging first
 setup_logging()
@@ -29,7 +30,8 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": "Internal server error"}
     )
 
-# Setup middleware (order matters: metrics first, then logging)
+# Setup middleware (order matters: CORS first, then metrics, then logging)
+app = setup_cors_middleware(app)
 app = setup_metrics_middleware(app)
 app = setup_logging_middleware(app)
 
