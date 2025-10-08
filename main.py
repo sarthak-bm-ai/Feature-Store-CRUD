@@ -1,12 +1,16 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from api.v1.routes import router
 from core.settings import settings
-from core.logging_config import setup_logging
+from core.logging_config import setup_logging, get_logger
 from middlewares.logging_middleware import setup_logging_middleware
 from middlewares.metrics_middleware import setup_metrics_middleware
 
 # Setup logging first
 setup_logging()
+
+# Get logger for global exception handling
+logger = get_logger("main")
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -14,6 +18,16 @@ app = FastAPI(
     version=settings.APP_VERSION,
     debug=settings.DEBUG
 )
+
+# Global exception handler
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Global exception handler for unhandled exceptions."""
+    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"}
+    )
 
 # Setup middleware (order matters: metrics first, then logging)
 app = setup_metrics_middleware(app)

@@ -27,12 +27,12 @@ def filter_features_new_schema(item: dict, feature_keys: set):
 @time_function(MetricNames.READ_SINGLE_ITEM)
 def get_category_features(identifier: str, category: str, table_type: str = Query(default="bright_uid", description="Table type: 'bright_uid' or 'account_id'")):
     if table_type not in ["bright_uid", "account_id"]:
-        raise HTTPException(status_code=400, detail="table_type must be 'bright_uid' or 'account_id'")
+        raise HTTPException(status_code=400, detail=f"Invalid table_type '{table_type}'. Must be 'bright_uid' or 'account_id'")
     
     item = crud.get_item(identifier, category, table_type)
     if not item:
         metrics.increment_counter(f"{MetricNames.READ_SINGLE_ITEM}.not_found", tags={"identifier": identifier, "category": category, "table_type": table_type})
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=404, detail=f"Item not found: {identifier}/{category}")
     metrics.increment_counter(f"{MetricNames.READ_SINGLE_ITEM}.success", tags={"identifier": identifier, "category": category, "table_type": table_type})
     return item
 
@@ -43,7 +43,7 @@ def get_category_features(identifier: str, category: str, table_type: str = Quer
 @time_function(MetricNames.READ_MULTI_CATEGORY)
 def get_items_by_feature_mapping(identifier: str, mapping: Dict[str, List[str]], table_type: str = Query(default="bright_uid", description="Table type: 'bright_uid' or 'account_id'")):
     if table_type not in ["bright_uid", "account_id"]:
-        raise HTTPException(status_code=400, detail="table_type must be 'bright_uid' or 'account_id'")
+        raise HTTPException(status_code=400, detail=f"Invalid table_type '{table_type}'. Must be 'bright_uid' or 'account_id'")
     
     if not mapping:
         metrics.increment_counter(f"{MetricNames.READ_MULTI_CATEGORY}.error", tags={"error_type": "empty_mapping", "table_type": table_type})
@@ -63,7 +63,7 @@ def get_items_by_feature_mapping(identifier: str, mapping: Dict[str, List[str]],
 
     if not results:
         metrics.increment_counter(f"{MetricNames.READ_MULTI_CATEGORY}.not_found", tags={"identifier": identifier, "table_type": table_type})
-        raise HTTPException(status_code=404, detail="No items found for provided mapping")
+        raise HTTPException(status_code=404, detail=f"No items found for identifier '{identifier}' with provided mapping")
 
     metrics.increment_counter(f"{MetricNames.READ_MULTI_CATEGORY}.success", tags={"identifier": identifier, "table_type": table_type})
     return {"identifier": identifier, "table_type": table_type, "items": results, "missing_categories": missing}
@@ -76,18 +76,18 @@ def get_items_by_feature_mapping(identifier: str, mapping: Dict[str, List[str]],
 @time_function(MetricNames.WRITE_MULTI_CATEGORY)
 def upsert_items(identifier: str, items: Dict[str, Dict], table_type: str = Query(default="bright_uid", description="Table type: 'bright_uid' or 'account_id'")):
     if table_type not in ["bright_uid", "account_id"]:
-        raise HTTPException(status_code=400, detail="table_type must be 'bright_uid' or 'account_id'")
+        raise HTTPException(status_code=400, detail=f"Invalid table_type '{table_type}'. Must be 'bright_uid' or 'account_id'")
     
     if not items:
         metrics.increment_counter(f"{MetricNames.WRITE_MULTI_CATEGORY}.error", tags={"error_type": "empty_body", "table_type": table_type})
-        raise HTTPException(status_code=400, detail="Body cannot be empty")
+        raise HTTPException(status_code=400, detail="Request body cannot be empty")
 
     results: Dict[str, dict] = {}
     total_features = 0
     
     for category, features in items.items():
         if not isinstance(features, dict):
-            raise HTTPException(status_code=400, detail=f"Features for category '{category}' must be an object")
+            raise HTTPException(status_code=400, detail=f"Features for category '{category}' must be a valid object/dictionary")
         
         # Use optimized upsert with automatic metadata handling
         crud.upsert_item_with_metadata(identifier, category, features, table_type)
