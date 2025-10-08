@@ -1,4 +1,4 @@
-from core.config import TABLES
+from core.config import get_table
 from core.metrics import metrics, time_function, MetricNames
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 from decimal import Decimal
@@ -60,9 +60,7 @@ def dict_to_dynamodb(python_dict: dict) -> dict:
 def get_item(identifier: str, category: str, table_type: str = "bright_uid"):
     """Get item from specified table type (bright_uid or account_id)"""
     try:
-        table = TABLES.get(table_type)
-        if not table:
-            raise ValueError(f"Invalid table_type: {table_type}. Must be 'bright_uid' or 'account_id'")
+        table = get_table(table_type)
         
         # Use appropriate partition key based on table type
         key = {table_type: identifier, "category": category}
@@ -97,9 +95,7 @@ def get_item(identifier: str, category: str, table_type: str = "bright_uid"):
 def put_item(item_data: dict, table_type: str = "bright_uid"):
     """Put a single item to DynamoDB. Converts features dict to DynamoDB format."""
     try:
-        table = TABLES.get(table_type)
-        if not table:
-            raise ValueError(f"Invalid table_type: {table_type}. Must be 'bright_uid' or 'account_id'")
+        table = get_table(table_type)
         
         # Convert features dict to DynamoDB format
         if "features" in item_data:
@@ -133,9 +129,7 @@ def put_item(item_data: dict, table_type: str = "bright_uid"):
 def upsert_item_with_metadata(identifier: str, category: str, features_data: dict, table_type: str = "bright_uid"):
     """Upsert item with automatic metadata handling - preserves created_at, updates updated_at."""
     try:
-        table = TABLES.get(table_type)
-        if not table:
-            raise ValueError(f"Invalid table_type: {table_type}. Must be 'bright_uid' or 'account_id'")
+        table = get_table(table_type)
         
         # Use appropriate partition key based on table type
         key = {table_type: identifier, "category": category}

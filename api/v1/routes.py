@@ -2,7 +2,9 @@ from fastapi import APIRouter, HTTPException, Query
 from components.features import crud
 from core.metrics import metrics, time_function, MetricNames
 from components.features.models import Item, Features, FeatureMetadata
+from core.config import health_check, get_all_tables
 from typing import Dict, List, Optional
+from datetime import datetime
 
 router = APIRouter()
 
@@ -95,3 +97,26 @@ def upsert_items(identifier: str, items: Dict[str, Dict], table_type: str = Quer
 
     metrics.increment_counter(f"{MetricNames.WRITE_MULTI_CATEGORY}.success", tags={"identifier": identifier, "table_type": table_type, "categories_count": str(len(items))})
     return {"message": "Items written successfully (full replace per category)", "identifier": identifier, "table_type": table_type, "results": results, "total_features": total_features}
+
+
+# Health check endpoint for DynamoDB connection
+@router.get("/health")
+def health_check_endpoint():
+    """Check DynamoDB connection health."""
+    try:
+        is_healthy = health_check()
+        tables = get_all_tables()
+        
+        return {
+            "status": "healthy" if is_healthy else "unhealthy",
+            "dynamodb_connection": is_healthy,
+            "tables_available": list(tables.keys()),
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "dynamodb_connection": False,
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }
