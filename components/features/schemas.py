@@ -165,9 +165,7 @@ class FeatureMetadataSchema(BaseModel):
     """Schema for feature metadata."""
     created_at: str = Field(..., description="Creation timestamp", example="2025-10-08T19:17:20.239310")
     updated_at: str = Field(..., description="Last update timestamp", example="2025-10-08T19:17:20.239310")
-    source: str = Field(..., description="Source of the feature", example="api")
     compute_id: str = Field(..., description="Compute ID", example="None")
-    ttl: str = Field(..., description="Time to live", example="None")
 
 class FeatureDataSchema(BaseModel):
     """Schema for feature data."""
@@ -229,9 +227,7 @@ class ReadResponseSchema(BaseModel):
                             "metadata": {
                                 "created_at": "2025-10-08T19:17:20.239310",
                                 "updated_at": "2025-10-08T19:17:20.239310",
-                                "source": "api",
-                                "compute_id": "None",
-                                "ttl": "None"
+                                "compute_id": "None"
                             }
                         }
                     }

@@ -152,9 +152,7 @@ def upsert_item_with_metadata(identifier: str, category: str, features_data: dic
             "metadata": {
                 "created_at": created_at,  # Preserved from existing or new
                 "updated_at": now,  # Always updated
-                "source": "api",
-                "compute_id": "None",
-                "ttl": "None"
+                "compute_id": "None"
             }
         }
         
