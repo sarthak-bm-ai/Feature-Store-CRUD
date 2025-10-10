@@ -9,8 +9,8 @@ The application now uses environment-based configuration instead of hardcoded va
 ```bash
 # AWS Configuration
 AWS_REGION=us-west-2
-TABLE_NAME_BRIGHT_UID=featuers_poc
-TABLE_NAME_ACCOUNT_ID=features_account_id
+TABLE_NAME_BRIGHT_UID=user_feature_store
+TABLE_NAME_ACCOUNT_ID=account_feature_store
 
 # StatsD Configuration
 STATSD_HOST=localhost
@@ -32,8 +32,8 @@ LOG_LEVEL=DEBUG
 
 # AWS Configuration
 AWS_REGION=us-west-2
-TABLE_NAME_BRIGHT_UID=featuers_poc
-TABLE_NAME_ACCOUNT_ID=features_account_id
+TABLE_NAME_BRIGHT_UID=user_feature_store
+TABLE_NAME_ACCOUNT_ID=account_feature_store
 
 # StatsD Configuration
 STATSD_HOST=localhost

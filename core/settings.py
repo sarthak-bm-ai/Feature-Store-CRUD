@@ -18,8 +18,8 @@ class Settings:
         
         # AWS Configuration
         self.AWS_REGION = os.getenv("AWS_REGION", "us-west-2")
-        self.TABLE_NAME_BRIGHT_UID = os.getenv("TABLE_NAME_BRIGHT_UID", "featuers_poc")
-        self.TABLE_NAME_ACCOUNT_ID = os.getenv("TABLE_NAME_ACCOUNT_ID", "features_account_id")
+        self.TABLE_NAME_BRIGHT_UID = os.getenv("TABLE_NAME_BRIGHT_UID", "user_feature_store")
+        self.TABLE_NAME_ACCOUNT_ID = os.getenv("TABLE_NAME_ACCOUNT_ID", "account_feature_store")
         
         # StatsD Configuration
         self.STATSD_HOST = os.getenv("STATSD_HOST", "localhost")
