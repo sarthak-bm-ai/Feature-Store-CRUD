@@ -5,6 +5,7 @@ Handles event publishing to Kafka with schema registry integration.
 import json
 import uuid
 import os
+import avro.schema
 from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 from confluent_kafka.avro import AvroProducer
@@ -25,12 +26,17 @@ class FeatureEventPublisher:
         self._initialize_producer()
     
     def _load_avro_schema(self):
-        """Load Avro schema from .avsc file."""
+        """Load Avro schema from .avsc file and parse it."""
         try:
             schema_path = os.path.join(os.path.dirname(__file__), '..', 'schemas', 'feature_trigger.avsc')
             with open(schema_path, 'r') as f:
-                schema = json.load(f)
-            logger.info(f"Loaded Avro schema from {schema_path}")
+                schema_dict = json.load(f)
+            
+            # Convert dict to JSON string and parse into Avro Schema object
+            # This is required because AvroProducer expects an avro.schema.Schema object
+            schema = avro.schema.parse(json.dumps(schema_dict))
+            
+            logger.info(f"Loaded and parsed Avro schema from {schema_path}")
             return schema
         except Exception as e:
             logger.error(f"Failed to load Avro schema: {e}")
@@ -114,26 +120,11 @@ class FeatureEventPublisher:
             )
             
             # Publish to Kafka with Avro serialization
-            try:
-                self.producer.produce(
-                    topic=self.topic_name,
-                    value=event_payload,
-                    callback=self._delivery_callback
-                )
-            except Exception as avro_error:
-                logger.warning(f"Avro serialization failed, falling back to JSON: {avro_error}")
-                # Fallback to JSON serialization
-                from confluent_kafka import Producer
-                json_producer = Producer({
-                    'bootstrap.servers': settings.KAFKA_BROKER_URL,
-                    'client.id': 'feature-store-api-json'
-                })
-                json_producer.produce(
-                    topic=self.topic_name,
-                    value=json.dumps(event_payload).encode('utf-8'),
-                    callback=self._delivery_callback
-                )
-                json_producer.flush(timeout=10)
+            self.producer.produce(
+                topic=self.topic_name,
+                value=event_payload,
+                callback=self._delivery_callback
+            )
             
             # Flush to ensure message is sent
             self.producer.flush(timeout=10)
