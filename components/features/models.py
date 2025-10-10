@@ -101,9 +101,12 @@ class ReadRequest(BaseModel):
         
         for feature in v['feature_list']:
             if not isinstance(feature, str):
-                raise ValueError('Feature must be a string in format "category:feature"')
+                raise ValueError('Feature must be a string in format "category:feature" or "category:*"')
             if ':' not in feature:
-                raise ValueError('Feature must be in format "category:feature"')
+                raise ValueError('Feature must be in format "category:feature" or "category:*"')
+            # Allow wildcard pattern
+            if feature.endswith(':') and not feature.endswith(':*'):
+                raise ValueError('Invalid feature format. Use "category:*" for wildcard or "category:feature" for specific feature')
         
         return v
 

@@ -215,12 +215,13 @@ class FeatureServices:
     def convert_feature_list_to_mapping(feature_list: List[str]) -> Dict[str, List[str]]:
         """
         Convert feature list to mapping format for read operations.
+        Supports wildcard patterns like "category:*" to get all features of a category.
         
         Args:
-            feature_list: List of features in format ["cat1:f1", "cat1:f2", "cat2:f3"]
+            feature_list: List of features in format ["cat1:f1", "cat1:f2", "cat2:*"]
             
         Returns:
-            Mapping in format {"cat1": ["f1", "f2"], "cat2": ["f3"]}
+            Mapping in format {"cat1": ["f1", "f2"], "cat2": ["*"]}
         """
         if not feature_list:
             logger.error("Empty feature list provided")
@@ -238,12 +239,24 @@ class FeatureServices:
             
             if ":" not in feature:
                 logger.error(f"Invalid feature format: {feature}")
-                raise ValueError(f"Feature must be in format 'category:feature', got: {feature}")
+                raise ValueError(f"Feature must be in format 'category:feature' or 'category:*', got: {feature}")
             
             category, feature_name = feature.split(":", 1)
-            if category not in mapping:
-                mapping[category] = []
-            mapping[category].append(feature_name)
+            
+            # Handle wildcard pattern
+            if feature_name == "*":
+                if category not in mapping:
+                    mapping[category] = []
+                mapping[category] = ["*"]  # Override with wildcard
+                logger.debug(f"Added wildcard pattern for category: {category}")
+            else:
+                if category not in mapping:
+                    mapping[category] = []
+                # Only add if not already wildcard
+                if "*" not in mapping[category]:
+                    mapping[category].append(feature_name)
+                else:
+                    logger.debug(f"Skipping {feature_name} for {category} - already has wildcard")
         
         logger.debug(f"Converted feature list to mapping: {len(mapping)} categories")
         return mapping

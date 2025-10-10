@@ -90,10 +90,12 @@ class FeatureFlows:
                 logger.warning(f"Category not found: {category}")
                 continue
             
-            # Apply filtering if features specified
-            if features:
+            # Apply filtering if features specified (skip if wildcard)
+            if features and "*" not in features:
                 item = FeatureFlows._filter_features(item, set(features))
                 logger.debug(f"Applied filtering to {category}: {features}")
+            elif "*" in features:
+                logger.debug(f"Wildcard pattern detected for {category} - returning all features")
             
             results[category] = item
         
