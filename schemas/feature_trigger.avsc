@@ -1,0 +1,56 @@
+{
+  "type": "record",
+  "name": "FeatureAvailabilityEvent",
+  "namespace": "com.featurestore.events",
+  "doc": "Event published when features become available in the feature store",
+  "fields": [
+    {
+      "name": "event_id",
+      "type": "string",
+      "doc": "Unique identifier for this event"
+    },
+    {
+      "name": "event_type",
+      "type": "string",
+      "doc": "Type of event (e.g., feature_available)"
+    },
+    {
+      "name": "timestamp",
+      "type": "string",
+      "doc": "ISO 8601 timestamp when the event was created"
+    },
+    {
+      "name": "entity_type",
+      "type": "string",
+      "doc": "Type of entity (bright_uid or account_id)"
+    },
+    {
+      "name": "entity_id",
+      "type": "string",
+      "doc": "Unique identifier of the entity"
+    },
+    {
+      "name": "resource_type",
+      "type": "string",
+      "doc": "Type of resource (e.g., feature)"
+    },
+    {
+      "name": "resource_name",
+      "type": "string",
+      "doc": "Name of the feature category/group"
+    },
+    {
+      "name": "compute_id",
+      "type": "string",
+      "doc": "Identifier of the compute job that generated the features"
+    },
+    {
+      "name": "features",
+      "type": {
+        "type": "array",
+        "items": "string"
+      },
+      "doc": "List of feature names that became available"
+    }
+  ]
+}

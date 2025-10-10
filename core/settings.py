@@ -34,6 +34,11 @@ class Settings:
         # Logging Configuration
         self.LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
         
+        # Kafka Configuration
+        self.KAFKA_BROKER_URL = os.getenv("KAFKA_BROKER_URL", "b-1.test-cluster-1.l40bth.c1.kafka.us-west-2.amazonaws.com:9092")
+        self.SCHEMA_REGISTRY = os.getenv("SCHEMA_REGISTRY", "http://10.100.101.102:8081")
+        self.TOPIC_NAME = os.getenv("TOPIC_NAME", "FEATURE_AVAILABILITY_EVENTS")
+        
     def get_table_name(self, table_type: str) -> str:
         """Get table name based on table type."""
         if table_type == "bright_uid":

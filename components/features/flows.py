@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Tuple
 from components.features import crud
 from core.metrics import metrics, MetricNames
 from core.logging_config import get_logger
+from core.kafka_publisher import publish_feature_availability_event
 
 # Configure logger
 logger = get_logger("feature_flows")
@@ -161,6 +162,24 @@ class FeatureFlows:
             
             # Upsert with automatic metadata handling
             crud.upsert_item_with_metadata(entity_value, category, features, entity_type)
+            
+            # Publish Kafka event after successful upsert
+            try:
+                
+                feature_names = list(features.keys())
+                success = publish_feature_availability_event(
+                    entity_type=entity_type,
+                    entity_value=entity_value,
+                    category=category,
+                    features=feature_names
+                )
+                if success:
+                    logger.info(f"Published Kafka event for {entity_type}:{entity_value} category: {category}")
+                else:
+                    logger.warning(f"Failed to publish Kafka event for {entity_type}:{entity_value} category: {category}")
+            except Exception as e:
+                logger.error(f"Kafka event publishing failed for {category}: {e}")
+                # Don't fail the upsert operation if Kafka fails
             
             total_features += len(features)
             results[category] = {

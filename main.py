@@ -37,3 +37,14 @@ app = setup_logging_middleware(app)
 
 # Include the API v1 router
 app.include_router(router, prefix="/api/v1", tags=["features"])
+
+# Graceful shutdown handler
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Handle graceful shutdown of resources."""
+    try:
+        from core.kafka_publisher import kafka_publisher
+        kafka_publisher.close()
+        logger.info("Kafka publisher closed gracefully")
+    except Exception as e:
+        logger.error(f"Error during shutdown: {e}")
