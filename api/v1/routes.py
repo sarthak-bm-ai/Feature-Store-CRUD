@@ -11,19 +11,19 @@ from datetime import datetime
 
 router = APIRouter()
 
-# 1) GET /get/item/{identifier}/{category} → return all features of that category
-@router.get("/get/item/{identifier}/{category}")
+# 1) GET /get/item/{entity_value}/{category} → return all features of that category
+@router.get("/get/item/{entity_value}/{category}")
 @time_function(MetricNames.READ_SINGLE_ITEM)
-def get_category_features(identifier: str, category: str, table_type: str = Query(default="bright_uid", description="Table type: 'bright_uid' or 'account_id'")):
+def get_category_features(entity_value: str, category: str, entity_type: str = Query(default="bright_uid", description="Entity type: 'bright_uid' or 'account_id'")):
     """Get all features for a specific category."""
     try:
-        return FeatureController.get_single_category(identifier, category, table_type)
+        return FeatureController.get_single_category(entity_value, category, entity_type)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
 
-# 2) POST /get/items with body containing identifier and mapping
-# Body: {metadata: {source: "api"}, data: {identifier: "bright_uid", identifier_value: "user123", feature_list: ["cat1:f1", "cat1:f2", "cat2:f3"]}}
+# 2) POST /get/items with body containing entity_type and mapping
+# Body: {metadata: {source: "api"}, data: {entity_type: "bright_uid", entity_value: "user123", feature_list: ["cat1:f1", "cat1:f2", "cat2:*"]}}
 @router.post("/get/items", response_model=ReadResponseSchema)
 @time_function(MetricNames.READ_MULTI_CATEGORY)
 def get_items_by_feature_mapping(request_data: ReadRequestSchema):
@@ -38,7 +38,7 @@ def get_items_by_feature_mapping(request_data: ReadRequestSchema):
 
 
 # 3) POST /items write → replace entire features map per category
-# Body: {metadata: {source: "api"}, data: {identifier: "bright_uid", identifier_value: "user123", feature_list: [{"category": "cat1", "features": {"f1": "v1", "f2": "v2"}}]}}
+# Body: {metadata: {source: "prediction_service"}, data: {entity_type: "bright_uid", entity_value: "user123", feature_list: [{"category": "cat1", "features": {"f1": "v1", "f2": "v2"}}]}}
 @router.post("/items", response_model=WriteResponseSchema)
 @time_function(MetricNames.WRITE_MULTI_CATEGORY)
 def upsert_items(request_data: WriteRequestSchema):

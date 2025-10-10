@@ -14,14 +14,14 @@ class FeatureFlows:
     """Business logic flows for feature operations."""
     
     @staticmethod
-    def get_single_category_flow(identifier: str, category: str, table_type: str) -> Dict:
+    def get_single_category_flow(entity_value: str, category: str, entity_type: str) -> Dict:
         """
         Flow for getting a single category's features.
         
         Args:
-            identifier: User/account identifier
+            entity_value: User/account identifier
             category: Feature category
-            table_type: Table type (bright_uid or account_id)
+            entity_type: Entity type (bright_uid or account_id)
             
         Returns:
             Dict containing the item data
@@ -29,51 +29,51 @@ class FeatureFlows:
         Raises:
             ValueError: If item not found
         """
-        logger.info(f"Getting single category: {identifier}/{category} from {table_type}")
+        logger.info(f"Getting single category: {entity_value}/{category} from {entity_type}")
         
         # Get item from database
-        item = crud.get_item(identifier, category, table_type)
+        item = crud.get_item(entity_value, category, entity_type)
         
         if not item:
-            logger.warning(f"Item not found: {identifier}/{category}")
+            logger.warning(f"Item not found: {entity_value}/{category}")
             metrics.increment_counter(
                 f"{MetricNames.READ_SINGLE_ITEM}.not_found",
-                tags={"identifier": identifier, "category": category, "table_type": table_type}
+                tags={"entity_value": entity_value, "category": category, "entity_type": entity_type}
             )
-            raise ValueError(f"Item not found: {identifier}/{category}")
+            raise ValueError(f"Item not found: {entity_value}/{category}")
         
         # Record success metrics
         metrics.increment_counter(
             f"{MetricNames.READ_SINGLE_ITEM}.success",
-            tags={"identifier": identifier, "category": category, "table_type": table_type}
+            tags={"entity_value": entity_value, "category": category, "entity_type": entity_type}
         )
         
-        logger.info(f"Successfully retrieved category: {identifier}/{category}")
+        logger.info(f"Successfully retrieved category: {entity_value}/{category}")
         return item
     
     @staticmethod
-    def get_multiple_categories_flow(identifier: str, mapping: Dict[str, List[str]], table_type: str) -> Dict:
+    def get_multiple_categories_flow(entity_value: str, mapping: Dict[str, List[str]], entity_type: str) -> Dict:
         """
         Flow for getting multiple categories with optional filtering.
         
         Args:
-            identifier: User/account identifier
+            entity_value: User/account identifier
             mapping: Category to features mapping for filtering
-            table_type: Table type (bright_uid or account_id)
+            entity_type: Entity type (bright_uid or account_id)
             
         Returns:
-            Dict containing results and missing categories
+            Dict containing results and unavailable_feature_categories
             
         Raises:
             ValueError: If no items found
         """
-        logger.info(f"Getting multiple categories for: {identifier} from {table_type}")
+        logger.info(f"Getting multiple categories for: {entity_value} from {entity_type}")
         
         if not mapping:
             logger.error("Empty mapping provided")
             metrics.increment_counter(
                 f"{MetricNames.READ_MULTI_CATEGORY}.error",
-                tags={"error_type": "empty_mapping", "table_type": table_type}
+                tags={"error_type": "empty_mapping", "entity_type": entity_type}
             )
             raise ValueError("Mapping body cannot be empty")
         
@@ -84,7 +84,7 @@ class FeatureFlows:
         for category, features in mapping.items():
             logger.debug(f"Processing category: {category} with features: {features}")
             
-            item = crud.get_item(identifier, category, table_type)
+            item = crud.get_item(entity_value, category, entity_type)
             if not item:
                 missing.append(category)
                 logger.warning(f"Category not found: {category}")
@@ -100,36 +100,36 @@ class FeatureFlows:
             results[category] = item
         
         if not results:
-            logger.warning(f"No items found for identifier: {identifier}")
+            logger.warning(f"No items found for entity_value: {entity_value}")
             metrics.increment_counter(
                 f"{MetricNames.READ_MULTI_CATEGORY}.not_found",
-                tags={"identifier": identifier, "table_type": table_type}
+                tags={"entity_value": entity_value, "entity_type": entity_type}
             )
-            raise ValueError(f"No items found for identifier '{identifier}' with provided mapping")
+            raise ValueError(f"No items found for entity_value '{entity_value}' with provided mapping")
         
         # Record success metrics
         metrics.increment_counter(
             f"{MetricNames.READ_MULTI_CATEGORY}.success",
-            tags={"identifier": identifier, "table_type": table_type}
+            tags={"entity_value": entity_value, "entity_type": entity_type}
         )
         
-        logger.info(f"Successfully retrieved {len(results)} categories for: {identifier}")
+        logger.info(f"Successfully retrieved {len(results)} categories for: {entity_value}")
         return {
-            "identifier": identifier,
-            "table_type": table_type,
+            "entity_value": entity_value,
+            "entity_type": entity_type,
             "items": results,
-            "missing_categories": missing
+            "unavailable_feature_categories": missing
         }
     
     @staticmethod
-    def upsert_features_flow(identifier: str, items: Dict[str, Dict], table_type: str) -> Dict:
+    def upsert_features_flow(entity_value: str, items: Dict[str, Dict], entity_type: str) -> Dict:
         """
         Flow for upserting features with automatic metadata handling.
         
         Args:
-            identifier: User/account identifier
+            entity_value: User/account identifier
             items: Features data organized by category
-            table_type: Table type (bright_uid or account_id)
+            entity_type: Entity type (bright_uid or account_id)
             
         Returns:
             Dict containing operation results
@@ -137,13 +137,13 @@ class FeatureFlows:
         Raises:
             ValueError: If validation fails
         """
-        logger.info(f"Upserting features for: {identifier} to {table_type}")
+        logger.info(f"Upserting features for: {entity_value} to {entity_type}")
         
         if not items:
             logger.error("Empty items provided")
             metrics.increment_counter(
                 f"{MetricNames.WRITE_MULTI_CATEGORY}.error",
-                tags={"error_type": "empty_body", "table_type": table_type}
+                tags={"error_type": "empty_body", "entity_type": entity_type}
             )
             raise ValueError("Request body cannot be empty")
         
@@ -160,7 +160,7 @@ class FeatureFlows:
                 raise ValueError(f"Features for category '{category}' must be a valid object/dictionary")
             
             # Upsert with automatic metadata handling
-            crud.upsert_item_with_metadata(identifier, category, features, table_type)
+            crud.upsert_item_with_metadata(entity_value, category, features, entity_type)
             
             total_features += len(features)
             results[category] = {
@@ -173,14 +173,14 @@ class FeatureFlows:
         # Record success metrics
         metrics.increment_counter(
             f"{MetricNames.WRITE_MULTI_CATEGORY}.success",
-            tags={"identifier": identifier, "table_type": table_type, "categories_count": str(len(items))}
+            tags={"entity_value": entity_value, "entity_type": entity_type, "categories_count": str(len(items))}
         )
         
-        logger.info(f"Successfully upserted {total_features} features across {len(items)} categories for: {identifier}")
+        logger.info(f"Successfully upserted {total_features} features across {len(items)} categories for: {entity_value}")
         return {
             "message": "Items written successfully (full replace per category)",
-            "identifier": identifier,
-            "table_type": table_type,
+            "entity_value": entity_value,
+            "entity_type": entity_type,
             "results": results,
             "total_features": total_features
         }

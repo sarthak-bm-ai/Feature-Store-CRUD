@@ -14,27 +14,27 @@ class FeatureController:
     """Controller for feature operations."""
     
     @staticmethod
-    def get_single_category(identifier: str, category: str, table_type: str) -> Dict:
+    def get_single_category(entity_value: str, category: str, entity_type: str) -> Dict:
         """
         Controller for getting a single category's features.
         
         Args:
-            identifier: User/account identifier
+            entity_value: User/account identifier
             category: Feature category
-            table_type: Table type (bright_uid or account_id)
+            entity_type: Entity type (bright_uid or account_id)
             
         Returns:
             Dict containing the item data
         """
-        logger.info(f"Controller: Getting single category {identifier}/{category}")
+        logger.info(f"Controller: Getting single category {entity_value}/{category}")
         
         # Validate inputs
-        FeatureServices.validate_table_type(table_type)
-        identifier = FeatureServices.sanitize_identifier(identifier)
+        FeatureServices.validate_table_type(entity_type)
+        entity_value = FeatureServices.sanitize_entity_value(entity_value)
         category = FeatureServices.sanitize_category(category)
         
         # Execute flow
-        return FeatureFlows.get_single_category_flow(identifier, category, table_type)
+        return FeatureFlows.get_single_category_flow(entity_value, category, entity_type)
     
     @staticmethod
     def get_multiple_categories(request_data: Dict) -> Dict:
@@ -51,20 +51,20 @@ class FeatureController:
         
         # Extract and validate request data
         metadata, data = FeatureServices.validate_request_structure(request_data)
-        identifier_type = data["identifier"]
-        identifier_value = data["identifier_value"]
+        entity_type = data["entity_type"]
+        entity_value = data["entity_value"]
         feature_list = data["feature_list"]
         
         # Convert feature_list to mapping format
         mapping = FeatureServices.convert_feature_list_to_mapping(feature_list)
         
         # Validate inputs
-        FeatureServices.validate_table_type(identifier_type)
-        identifier_value = FeatureServices.sanitize_identifier(identifier_value)
+        FeatureServices.validate_table_type(entity_type)
+        entity_value = FeatureServices.sanitize_entity_value(entity_value)
         FeatureServices.validate_mapping(mapping)
         
         # Execute flow
-        return FeatureFlows.get_multiple_categories_flow(identifier_value, mapping, identifier_type)
+        return FeatureFlows.get_multiple_categories_flow(entity_value, mapping, entity_type)
     
     @staticmethod
     def upsert_features(request_data: Dict) -> Dict:
@@ -81,17 +81,17 @@ class FeatureController:
         
         # Extract and validate request data
         metadata, data = FeatureServices.validate_request_structure(request_data)
-        identifier_type = data["identifier"]
-        identifier_value = data["identifier_value"]
+        entity_type = data["entity_type"]
+        entity_value = data["entity_value"]
         feature_list = data["feature_list"]
         
         # Convert feature_list to items format
         items = FeatureServices.convert_feature_list_to_items(feature_list)
         
         # Validate inputs
-        FeatureServices.validate_table_type(identifier_type)
-        identifier_value = FeatureServices.sanitize_identifier(identifier_value)
+        FeatureServices.validate_table_type(entity_type)
+        entity_value = FeatureServices.sanitize_entity_value(entity_value)
         FeatureServices.validate_items(items)
         
         # Execute flow
-        return FeatureFlows.upsert_features_flow(identifier_value, items, identifier_type)
+        return FeatureFlows.upsert_features_flow(entity_value, items, entity_type)

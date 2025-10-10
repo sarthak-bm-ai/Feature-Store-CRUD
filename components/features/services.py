@@ -102,33 +102,33 @@ class FeatureServices:
         logger.debug(f"Items validated: {len(items)} categories")
     
     @staticmethod
-    def sanitize_identifier(identifier: str) -> str:
+    def sanitize_entity_value(entity_value: str) -> str:
         """
-        Sanitize identifier for security.
+        Sanitize entity value for security.
         
         Args:
-            identifier: Identifier to sanitize
+            entity_value: Entity value to sanitize
             
         Returns:
-            Sanitized identifier
+            Sanitized entity value
         """
-        if not identifier:
-            logger.error("Empty identifier provided")
-            raise ValueError("Identifier cannot be empty")
+        if not entity_value:
+            logger.error("Empty entity value provided")
+            raise ValueError("Entity value cannot be empty")
         
-        if not isinstance(identifier, str):
-            logger.error(f"Invalid identifier type: {type(identifier)}")
-            raise ValueError(f"Identifier must be a string, got {type(identifier)}")
+        if not isinstance(entity_value, str):
+            logger.error(f"Invalid entity value type: {type(entity_value)}")
+            raise ValueError(f"Entity value must be a string, got {type(entity_value)}")
         
         # Basic sanitization - remove potentially dangerous characters
-        sanitized = identifier.strip()
+        sanitized = entity_value.strip()
         
         # Check for reasonable length
         if len(sanitized) > 255:
-            logger.warning(f"Very long identifier: {len(sanitized)} characters")
+            logger.warning(f"Very long entity value: {len(sanitized)} characters")
             sanitized = sanitized[:255]
         
-        logger.debug(f"Identifier sanitized: {len(identifier)} -> {len(sanitized)}")
+        logger.debug(f"Entity value sanitized: {len(entity_value)} -> {len(sanitized)}")
         return sanitized
     
     @staticmethod
@@ -202,7 +202,7 @@ class FeatureServices:
             raise ValueError("Data must be a dictionary")
         
         # Validate required data fields
-        required_fields = ["identifier", "identifier_value", "feature_list"]
+        required_fields = ["entity_type", "entity_value", "feature_list"]
         for field in required_fields:
             if field not in data:
                 logger.error(f"Missing required field: {field}")

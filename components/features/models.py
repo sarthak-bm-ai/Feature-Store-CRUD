@@ -60,15 +60,15 @@ class WriteRequest(BaseModel):
         if not v:
             raise ValueError('Data cannot be empty')
         
-        required_fields = ['identifier', 'identifier_value', 'feature_list']
+        required_fields = ['entity_type', 'entity_value', 'feature_list']
         for field in required_fields:
             if field not in v:
                 raise ValueError(f'Missing required field: {field}')
         
-        if v['identifier'] not in ['bright_uid', 'account_id']:
+        if v['entity_type'] not in ['bright_uid', 'account_id']:
             raise ValueError('Identifier must be either "bright_uid" or "account_id"')
         
-        if not v['identifier_value'] or not isinstance(v['identifier_value'], str):
+        if not v['entity_value'] or not isinstance(v['entity_value'], str):
             raise ValueError('Identifier value must be a non-empty string')
         
         if not v['feature_list'] or not isinstance(v['feature_list'], list):
@@ -85,15 +85,15 @@ class ReadRequest(BaseModel):
         if not v:
             raise ValueError('Data cannot be empty')
         
-        required_fields = ['identifier', 'identifier_value', 'feature_list']
+        required_fields = ['entity_type', 'entity_value', 'feature_list']
         for field in required_fields:
             if field not in v:
                 raise ValueError(f'Missing required field: {field}')
         
-        if v['identifier'] not in ['bright_uid', 'account_id']:
+        if v['entity_type'] not in ['bright_uid', 'account_id']:
             raise ValueError('Identifier must be either "bright_uid" or "account_id"')
         
-        if not v['identifier_value'] or not isinstance(v['identifier_value'], str):
+        if not v['entity_value'] or not isinstance(v['entity_value'], str):
             raise ValueError('Identifier value must be a non-empty string')
         
         if not v['feature_list'] or not isinstance(v['feature_list'], list):
@@ -113,16 +113,16 @@ class ReadRequest(BaseModel):
 # Response models
 class WriteResponse(BaseModel):
     message: str = Field(..., description="Success message", example="Items written successfully (full replace per category)")
-    identifier: str = Field(..., description="User/account identifier", example="user123")
-    table_type: str = Field(..., description="Table type used", example="bright_uid")
+    entity_value: str = Field(..., description="User/account identifier", example="user123")
+    entity_type: str = Field(..., description="Entity type used", example="bright_uid")
     results: Dict[str, Dict[str, Any]] = Field(..., description="Results per category")
     total_features: int = Field(..., description="Total number of features written", example=5)
 
 class ReadResponse(BaseModel):
-    identifier: str = Field(..., description="User/account identifier", example="user123")
-    table_type: str = Field(..., description="Table type used", example="bright_uid")
+    entity_value: str = Field(..., description="User/account identifier", example="user123")
+    entity_type: str = Field(..., description="Entity type used", example="bright_uid")
     items: Dict[str, Item] = Field(..., description="Retrieved items")
-    missing_categories: List[str] = Field(..., description="Categories not found", example=[])
+    unavailable_feature_categories: List[str] = Field(..., description="Categories not found", example=[])
 
 class HealthResponse(BaseModel):
     status: str = Field(..., description="Health status", example="healthy")
