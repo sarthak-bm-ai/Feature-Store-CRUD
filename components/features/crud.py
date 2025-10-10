@@ -3,6 +3,7 @@ from core.metrics import metrics, time_function, MetricNames
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 from decimal import Decimal
 from datetime import datetime
+from .models import FeatureMetadata, Features
 
 deserializer = TypeDeserializer()
 serializer = TypeSerializer()
@@ -147,17 +148,18 @@ def upsert_item_with_metadata(identifier: str, category: str, features_data: dic
         else:
             created_at = now
         
-        features_obj = {
-            "data": features_data,
-            "metadata": {
-                "created_at": created_at,  # Preserved from existing or new
-                "updated_at": now,  # Always updated
-                "compute_id": "None"
-            }
-        }
+        metadata = FeatureMetadata(
+            created_at=created_at,
+            updated_at=now,
+            compute_id="None"
+        )
+        features_obj = Features(
+            data=features_data,
+            metadata=metadata
+        )
         
         # Convert to DynamoDB format
-        dynamo_features = dict_to_dynamodb(features_obj)
+        dynamo_features = dict_to_dynamodb(features_obj.dict())
         
         # Use PutItem to replace the entire features object
         item_data = {**key, "features": dynamo_features}
