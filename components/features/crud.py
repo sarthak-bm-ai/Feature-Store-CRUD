@@ -1,5 +1,6 @@
 from core.config import get_table
 from core.metrics import metrics, time_function, MetricNames
+from core.timestamp_utils import get_current_timestamp, ensure_timestamp_consistency
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 from decimal import Decimal
 from datetime import datetime
@@ -144,13 +145,15 @@ def upsert_item_with_metadata(identifier: str, category: str, features_data: dic
         # Check if item exists to preserve created_at
         existing_item = table.get_item(Key=key).get("Item")
         
-        # Create the features object with metadata
-        now = datetime.utcnow().isoformat()
+        # Create the features object with metadata using centralized timestamp utility
+        now = get_current_timestamp()
         
         # Preserve created_at if item exists, otherwise use current time
         if existing_item and "features" in existing_item:
             existing_features = dynamodb_to_dict(existing_item["features"])
-            created_at = existing_features.get("metadata", {}).get("created_at", now)
+            existing_created_at = existing_features.get("metadata", {}).get("created_at")
+            # Ensure timestamp consistency for existing created_at
+            created_at = ensure_timestamp_consistency(existing_created_at) if existing_created_at else now
         else:
             created_at = now
         

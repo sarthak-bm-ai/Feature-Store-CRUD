@@ -4,9 +4,33 @@ from datetime import datetime
 
 # Core data models
 class FeatureMetadata(BaseModel):
-    created_at: datetime
-    updated_at: datetime
-    compute_id: Optional[str] = None
+    """
+    Metadata for feature records.
+    All timestamps are in ISO 8601 format with milliseconds precision.
+    """
+    created_at: datetime = Field(..., description="Creation timestamp in ISO 8601 format")
+    updated_at: datetime = Field(..., description="Last update timestamp in ISO 8601 format")
+    compute_id: Optional[str] = Field(None, description="ID of the compute job that generated the features")
+    
+    @validator('created_at', 'updated_at', pre=True)
+    def parse_timestamp(cls, v):
+        """Ensure timestamps are properly parsed from ISO 8601 strings."""
+        if isinstance(v, str):
+            try:
+                return datetime.fromisoformat(v)
+            except ValueError:
+                # Try alternate formats
+                from datetime import timezone
+                try:
+                    dt = datetime.strptime(v, "%Y-%m-%dT%H:%M:%S.%f")
+                    return dt.replace(tzinfo=timezone.utc)
+                except ValueError:
+                    try:
+                        dt = datetime.strptime(v, "%Y-%m-%dT%H:%M:%S")
+                        return dt.replace(tzinfo=timezone.utc)
+                    except ValueError:
+                        raise ValueError(f"Invalid timestamp format: {v}. Expected ISO 8601 format.")
+        return v
 
 class Features(BaseModel):
     data: Dict[str, Any]  # actual feature values

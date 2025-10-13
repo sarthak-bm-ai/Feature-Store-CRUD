@@ -6,12 +6,12 @@ import json
 import uuid
 import os
 import avro.schema
-from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 from confluent_kafka.avro import AvroProducer
 from confluent_kafka.avro.serializer import SerializerError
 from core.settings import settings
 from core.logging_config import get_logger
+from core.timestamp_utils import get_current_timestamp
 
 logger = get_logger("kafka_publisher")
 
@@ -84,7 +84,7 @@ class FeatureEventPublisher:
         return {
             "event_id": str(uuid.uuid4()),
             "event_type": "feature_available",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": get_current_timestamp(),
             "entity_type": entity_type,
             "entity_id": entity_value,
             "resource_type": "feature",

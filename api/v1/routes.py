@@ -6,8 +6,8 @@ from components.features.schemas import (
 )
 from core.metrics import time_function, MetricNames
 from core.config import health_check, get_all_tables
+from core.timestamp_utils import get_current_timestamp
 from typing import Dict, List
-from datetime import datetime
 
 router = APIRouter()
 
@@ -61,12 +61,12 @@ def health_check_endpoint():
             status="healthy" if is_healthy else "unhealthy",
             dynamodb_connection=is_healthy,
             tables_available=list(tables.keys()),
-            timestamp=datetime.utcnow().isoformat()
+            timestamp=get_current_timestamp()
         )
     except Exception as e:
         return HealthResponseSchema(
             status="unhealthy",
             dynamodb_connection=False,
             tables_available=[],
-            timestamp=datetime.utcnow().isoformat()
+            timestamp=get_current_timestamp()
         )
