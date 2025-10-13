@@ -4,7 +4,7 @@ from core.timestamp_utils import get_current_timestamp, ensure_timestamp_consist
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 from decimal import Decimal
 from datetime import datetime
-from .models import FeatureMetadata, Features
+from .models import FeatureMeta, Features
 
 deserializer = TypeDeserializer()
 serializer = TypeSerializer()
@@ -79,7 +79,7 @@ def get_item(identifier: str, category: str, table_type: str = "bright_uid"):
                                     tags={"category": category, "table_type": table_type})
             return None
 
-        # Convert the features structure (data and metadata)
+        # Convert the features structure (data and meta)
         if "features" in item:
             features = dynamodb_to_dict(item["features"])
             item["features"] = features
@@ -134,8 +134,8 @@ def put_item(item_data: dict, table_type: str = "bright_uid"):
 
 
 @time_function(MetricNames.DYNAMODB_UPDATE_ITEM)
-def upsert_item_with_metadata(identifier: str, category: str, features_data: dict, table_type: str = "bright_uid"):
-    """Upsert item with automatic metadata handling - preserves created_at, updates updated_at."""
+def upsert_item_with_meta(identifier: str, category: str, features_data: dict, table_type: str = "bright_uid"):
+    """Upsert item with automatic meta handling - preserves created_at, updates updated_at."""
     try:
         table = get_table(table_type)
         
@@ -145,26 +145,26 @@ def upsert_item_with_metadata(identifier: str, category: str, features_data: dic
         # Check if item exists to preserve created_at
         existing_item = table.get_item(Key=key).get("Item")
         
-        # Create the features object with metadata using centralized timestamp utility
+        # Create the features object with meta using centralized timestamp utility
         now = get_current_timestamp()
         
         # Preserve created_at if item exists, otherwise use current time
         if existing_item and "features" in existing_item:
             existing_features = dynamodb_to_dict(existing_item["features"])
-            existing_created_at = existing_features.get("metadata", {}).get("created_at")
+            existing_created_at = existing_features.get("meta", {}).get("created_at")
             # Ensure timestamp consistency for existing created_at
             created_at = ensure_timestamp_consistency(existing_created_at) if existing_created_at else now
         else:
             created_at = now
         
-        metadata = FeatureMetadata(
+        meta = FeatureMeta(
             created_at=created_at,
             updated_at=now,
             compute_id="None"
         )
         features_obj = Features(
             data=features_data,
-            metadata=metadata
+            meta=meta
         )
         
         # Convert to plain dict

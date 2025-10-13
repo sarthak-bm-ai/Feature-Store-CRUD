@@ -3,9 +3,9 @@ from pydantic import BaseModel, Field, validator
 from datetime import datetime
 
 # Core data models
-class FeatureMetadata(BaseModel):
+class FeatureMeta(BaseModel):
     """
-    Metadata for feature records.
+    Meta information for feature records.
     All timestamps are in ISO 8601 format with milliseconds precision.
     """
     created_at: datetime = Field(..., description="Creation timestamp in ISO 8601 format")
@@ -34,7 +34,7 @@ class FeatureMetadata(BaseModel):
 
 class Features(BaseModel):
     data: Dict[str, Any]  # actual feature values
-    metadata: FeatureMetadata
+    meta: FeatureMeta
 
 class Item(BaseModel):
     bright_uid: Optional[str] = None
@@ -43,10 +43,10 @@ class Item(BaseModel):
     features: Features
 
 # Request models
-class RequestMetadata(BaseModel):
+class RequestMeta(BaseModel):
     source: str = Field(..., description="Source of the request", example="api")
 
-class WriteRequestMetadata(BaseModel):
+class WriteRequestMeta(BaseModel):
     source: str = Field(..., description="Source of the request", example="prediction_service")
     
     @validator('source')
@@ -76,7 +76,7 @@ class FeatureItem(BaseModel):
         return v
 
 class WriteRequest(BaseModel):
-    metadata: WriteRequestMetadata
+    meta: WriteRequestMeta
     data: Dict[str, Any]
     
     @validator('data')
@@ -101,7 +101,7 @@ class WriteRequest(BaseModel):
         return v
 
 class ReadRequest(BaseModel):
-    metadata: RequestMetadata
+    meta: RequestMeta
     data: Dict[str, Any]
     
     @validator('data')

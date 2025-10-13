@@ -125,7 +125,7 @@ class FeatureFlows:
     @staticmethod
     def upsert_features_flow(entity_value: str, items: Dict[str, Dict], entity_type: str) -> Dict:
         """
-        Flow for upserting features with automatic metadata handling.
+        Flow for upserting features with automatic meta handling.
         
         Args:
             entity_value: User/account identifier
@@ -160,8 +160,8 @@ class FeatureFlows:
                 logger.error(f"Invalid features type for category: {category}")
                 raise ValueError(f"Features for category '{category}' must be a valid object/dictionary")
             
-            # Upsert with automatic metadata handling
-            crud.upsert_item_with_metadata(entity_value, category, features, entity_type)
+            # Upsert with automatic meta handling
+            crud.upsert_item_with_meta(entity_value, category, features, entity_type)
             
             # Publish Kafka event after successful upsert
             try:
@@ -207,7 +207,7 @@ class FeatureFlows:
     @staticmethod
     def _filter_features(item: dict, feature_keys: set) -> dict:
         """
-        Filter features in the new schema (data.metadata structure).
+        Filter features in the new schema (data.meta structure).
         
         Args:
             item: Item containing features

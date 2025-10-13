@@ -164,13 +164,13 @@ class FeatureServices:
     @staticmethod
     def validate_request_structure(request_data: Dict) -> tuple:
         """
-        Validate and extract metadata and data from request.
+        Validate and extract meta and data from request.
         
         Args:
-            request_data: Request data containing metadata and data
+            request_data: Request data containing meta and data
             
         Returns:
-            Tuple of (metadata, data)
+            Tuple of (meta, data)
             
         Raises:
             ValueError: If request structure is invalid
@@ -180,21 +180,21 @@ class FeatureServices:
             raise ValueError("Request body cannot be empty")
         
         # Validate top-level structure
-        if "metadata" not in request_data:
-            logger.error("Missing metadata in request")
-            raise ValueError("Request must contain 'metadata' field")
+        if "meta" not in request_data:
+            logger.error("Missing meta in request")
+            raise ValueError("Request must contain 'meta' field")
         
         if "data" not in request_data:
             logger.error("Missing data in request")
             raise ValueError("Request must contain 'data' field")
         
-        metadata = request_data["metadata"]
+        meta = request_data["meta"]
         data = request_data["data"]
         
-        # Validate metadata structure
-        if not isinstance(metadata, dict):
-            logger.error(f"Invalid metadata type: {type(metadata)}")
-            raise ValueError("Metadata must be a dictionary")
+        # Validate meta structure
+        if not isinstance(meta, dict):
+            logger.error(f"Invalid meta type: {type(meta)}")
+            raise ValueError("Meta must be a dictionary")
         
         # Validate data structure
         if not isinstance(data, dict):
@@ -209,7 +209,7 @@ class FeatureServices:
                 raise ValueError(f"Data must contain '{field}' field")
         
         logger.debug("Request structure validated successfully")
-        return metadata, data
+        return meta, data
     
     @staticmethod
     def convert_feature_list_to_mapping(feature_list: List[str]) -> Dict[str, List[str]]:

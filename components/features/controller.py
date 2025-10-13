@@ -42,7 +42,7 @@ class FeatureController:
         Controller for getting multiple categories with filtering.
         
         Args:
-            request_data: Request containing metadata and data with identifier and feature_list
+            request_data: Request containing meta and data with identifier and feature_list
             
         Returns:
             Dict containing results and missing categories
@@ -50,7 +50,7 @@ class FeatureController:
         logger.info("Controller: Getting multiple categories from request data")
         
         # Extract and validate request data
-        metadata, data = FeatureServices.validate_request_structure(request_data)
+        meta, data = FeatureServices.validate_request_structure(request_data)
         entity_type = data["entity_type"]
         entity_value = data["entity_value"]
         feature_list = data["feature_list"]
@@ -72,7 +72,7 @@ class FeatureController:
         Controller for upserting features.
         
         Args:
-            request_data: Request containing metadata and data with identifier and feature_list
+            request_data: Request containing meta and data with identifier and feature_list
             
         Returns:
             Dict containing operation results
@@ -80,7 +80,7 @@ class FeatureController:
         logger.info("Controller: Upserting features from request data")
         
         # Extract and validate request data
-        metadata, data = FeatureServices.validate_request_structure(request_data)
+        meta, data = FeatureServices.validate_request_structure(request_data)
         entity_type = data["entity_type"]
         entity_value = data["entity_value"]
         feature_list = data["feature_list"]
