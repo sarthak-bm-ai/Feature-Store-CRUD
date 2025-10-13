@@ -32,29 +32,34 @@ def dynamodb_to_dict(dynamo_item: dict) -> dict:
     return result
 
 
+def _convert_floats_to_decimal(obj):
+    """Convert float values to Decimal and datetime to string for DynamoDB compatibility."""
+    if isinstance(obj, float):
+        return Decimal(str(obj))
+    elif isinstance(obj, datetime):
+        return obj.isoformat()
+    elif isinstance(obj, dict):
+        return {k: _convert_floats_to_decimal(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_convert_floats_to_decimal(item) for item in obj]
+    return obj
+
+
 def dict_to_dynamodb(python_dict: dict) -> dict:
     """
-    Convert a standard Python dict to DynamoDB format.
-    Handles nested dicts and converts them to DynamoDB Maps.
+    Convert a standard Python dict to DynamoDB format using TypeSerializer.
+    This properly handles nested structures without excessive wrapping.
+    Converts floats to Decimal for DynamoDB compatibility.
     """
     if not isinstance(python_dict, dict):
         return python_dict
     
-    result = {}
-    for k, v in python_dict.items():
-        if isinstance(v, dict):
-            result[k] = {"M": dict_to_dynamodb(v)}
-        elif isinstance(v, str):
-            result[k] = {"S": v}
-        elif isinstance(v, (int, float)):
-            result[k] = {"N": str(v)}
-        elif isinstance(v, bool):
-            result[k] = {"BOOL": v}
-        elif isinstance(v, list):
-            result[k] = {"L": [{"S": str(item)} if isinstance(item, str) else {"N": str(item)} if isinstance(item, (int, float)) else {"BOOL": item} if isinstance(item, bool) else {"S": str(item)} for item in v]}
-        else:
-            result[k] = {"S": str(v)}
-    return result
+    # Convert floats to Decimal (required by DynamoDB)
+    converted_dict = _convert_floats_to_decimal(python_dict)
+    
+    # Use TypeSerializer to properly convert to DynamoDB format
+    # It handles all nested structures correctly
+    return serializer.serialize(converted_dict)
 
 
 @time_function(MetricNames.DYNAMODB_GET_ITEM)
@@ -94,13 +99,14 @@ def get_item(identifier: str, category: str, table_type: str = "bright_uid"):
 
 @time_function(MetricNames.DYNAMODB_PUT_ITEM)
 def put_item(item_data: dict, table_type: str = "bright_uid"):
-    """Put a single item to DynamoDB. Converts features dict to DynamoDB format."""
+    """Put a single item to DynamoDB. boto3 Table resource handles serialization automatically."""
     try:
         table = get_table(table_type)
         
-        # Convert features dict to DynamoDB format
+        # Convert floats to Decimal for boto3 compatibility
+        # Table resource will handle DynamoDB format conversion automatically
         if "features" in item_data:
-            item_data["features"] = dict_to_dynamodb(item_data["features"])
+            item_data["features"] = _convert_floats_to_decimal(item_data["features"])
         
         response = table.put_item(Item=item_data)
         
@@ -158,11 +164,16 @@ def upsert_item_with_metadata(identifier: str, category: str, features_data: dic
             metadata=metadata
         )
         
-        # Convert to DynamoDB format
-        dynamo_features = dict_to_dynamodb(features_obj.dict())
+        # Convert to plain dict
+        features_dict = features_obj.model_dump()
+        
+        # Convert floats to Decimal for boto3 compatibility (Table resource requires this)
+        # But don't use dict_to_dynamodb() as it manually serializes to DynamoDB format
+        # The Table resource will handle the DynamoDB format conversion
+        features_dict = _convert_floats_to_decimal(features_dict)
         
         # Use PutItem to replace the entire features object
-        item_data = {**key, "features": dynamo_features}
+        item_data = {**key, "features": features_dict}
         table.put_item(Item=item_data)
         
         # Convert back to regular dict for response
