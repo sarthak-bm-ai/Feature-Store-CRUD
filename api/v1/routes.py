@@ -32,9 +32,9 @@ def get_items_by_feature_mapping(request_data: ReadRequestSchema):
         return FeatureController.get_multiple_categories(request_data.dict())
     except ValueError as e:
         if "not found" in str(e).lower():
-            raise HTTPException(status_code=404, detail=str(e), response_model=ErrorResponseSchema)
+            raise HTTPException(status_code=404, detail=str(e))
         else:
-            raise HTTPException(status_code=400, detail=str(e), response_model=ErrorResponseSchema)
+            raise HTTPException(status_code=400, detail=str(e))
 
 
 # 3) POST /items write → replace entire features map per category
@@ -46,7 +46,7 @@ def upsert_items(request_data: WriteRequestSchema):
     try:
         return FeatureController.upsert_features(request_data.dict())
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e), response_model=ErrorResponseSchema)
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # Health check endpoint for DynamoDB connection

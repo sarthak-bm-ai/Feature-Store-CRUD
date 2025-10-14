@@ -4,6 +4,7 @@ Handles validation, business rules, and data transformation.
 """
 from typing import Dict, List, Optional
 from core.logging_config import get_logger
+from core.settings import settings
 
 # Configure logger
 logger = get_logger("feature_services")
@@ -63,6 +64,28 @@ class FeatureServices:
         logger.debug(f"Mapping validated: {len(mapping)} categories")
     
     @staticmethod
+    def validate_category_for_write(category: str) -> None:
+        """
+        Validate that category is allowed for write operations.
+        
+        Args:
+            category: Category name to validate
+            
+        Raises:
+            ValueError: If category is not in allowed list
+        """
+        allowed_categories = settings.ALLOWED_WRITE_CATEGORIES
+        
+        if category not in allowed_categories:
+            logger.error(f"Category '{category}' not in allowed write categories: {allowed_categories}")
+            raise ValueError(
+                f"Category '{category}' is not allowed for write operations. "
+                f"Allowed categories: {', '.join(allowed_categories)}"
+            )
+        
+        logger.debug(f"Category validated for write: {category}")
+    
+    @staticmethod
     def validate_items(items: Dict[str, Dict]) -> None:
         """
         Validate items for upsert operations.
@@ -82,6 +105,9 @@ class FeatureServices:
             if not isinstance(category, str):
                 logger.error(f"Invalid category type: {type(category)}")
                 raise ValueError(f"Category must be a string, got {type(category)}")
+            
+            # Validate category is in allowed list for write operations
+            FeatureServices.validate_category_for_write(category)
             
             if not isinstance(features, dict):
                 logger.error(f"Invalid features type for category {category}: {type(features)}")
