@@ -43,8 +43,13 @@ app.include_router(router, prefix="/api/v1", tags=["features"])
 async def shutdown_event():
     """Handle graceful shutdown of resources."""
     try:
-        from core.kafka_publisher import kafka_publisher
-        kafka_publisher.close()
-        logger.info("Kafka publisher closed gracefully")
+        from core.kafka_publisher import get_kafka_publisher, _kafka_publisher
+        # Only close if it was actually initialized
+        if _kafka_publisher is not None:
+            publisher = get_kafka_publisher()
+            publisher.close()
+            logger.info("Kafka publisher closed gracefully")
+        else:
+            logger.info("Kafka publisher was never initialized, nothing to close")
     except Exception as e:
         logger.error(f"Error during shutdown: {e}")

@@ -25,8 +25,8 @@ class RequestResponseLogger:
         start_time = time.time()
         request_id = self._generate_request_id()
         
-        # Log request details
-        await self._log_request(request, request_id)
+        # Log request details (synchronous)
+        self._log_request(request, request_id)
         
         # Process request
         response = await call_next(request)
@@ -34,8 +34,8 @@ class RequestResponseLogger:
         # Calculate duration
         duration = time.time() - start_time
         
-        # Log response details
-        await self._log_response(request, response, duration, request_id)
+        # Log response details (synchronous)
+        self._log_response(request, response, duration, request_id)
         
         return response
     
@@ -44,7 +44,7 @@ class RequestResponseLogger:
         import uuid
         return str(uuid.uuid4())[:8]
     
-    async def _log_request(self, request: Request, request_id: str):
+    def _log_request(self, request: Request, request_id: str):
         """Log incoming request details."""
         # Extract request information
         client_ip = request.client.host if request.client else "unknown"
@@ -83,7 +83,7 @@ class RequestResponseLogger:
         else:
             logger.info(f"REQUEST [{request_id}] {request.method} {request.url.path}", extra=request_log)
     
-    async def _log_response(self, request: Request, response: Response, duration: float, request_id: str):
+    def _log_response(self, request: Request, response: Response, duration: float, request_id: str):
         """Log outgoing response details."""
         # Extract response information
         status_code = response.status_code

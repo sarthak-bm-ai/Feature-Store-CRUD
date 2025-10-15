@@ -42,12 +42,12 @@ class MetricsMiddleware:
         # Calculate duration
         duration = (time.time() - start_time) * 1000  # Convert to milliseconds
         
-        # Track comprehensive metrics
-        await self._track_metrics(request, response, duration, status_code, error)
+        # Track comprehensive metrics (synchronous)
+        self._track_metrics(request, response, duration, status_code, error)
         
         return response
     
-    async def _track_metrics(self, request: Request, response: Response, duration: float, status_code: int, error: str = None):
+    def _track_metrics(self, request: Request, response: Response, duration: float, status_code: int, error: str = None):
         """Track comprehensive HTTP metrics."""
         method = request.method
         path = str(request.url.path)

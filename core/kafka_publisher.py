@@ -155,8 +155,15 @@ class FeatureEventPublisher:
             self.producer = None
             logger.info("Kafka producer closed")
 
-# Global publisher instance
-kafka_publisher = FeatureEventPublisher()
+# Global publisher instance (lazy-loaded to avoid connection on import)
+_kafka_publisher = None
+
+def _get_publisher():
+    """Get or create the global Kafka publisher instance (lazy initialization)."""
+    global _kafka_publisher
+    if _kafka_publisher is None:
+        _kafka_publisher = FeatureEventPublisher()
+    return _kafka_publisher
 
 def publish_feature_availability_event(entity_type: str, entity_value: str, 
                                       category: str, features: List[str], 
@@ -174,6 +181,16 @@ def publish_feature_availability_event(entity_type: str, entity_value: str,
     Returns:
         True if published successfully, False otherwise
     """
-    return kafka_publisher.publish_feature_event(
-        entity_type, entity_value, category, features, compute_id
-    )
+    try:
+        publisher = _get_publisher()
+        return publisher.publish_feature_event(
+            entity_type, entity_value, category, features, compute_id
+        )
+    except Exception as e:
+        logger.error(f"Failed to get publisher or publish event: {e}")
+        return False
+
+# Expose for backward compatibility (will be lazily initialized)
+def get_kafka_publisher():
+    """Get the global Kafka publisher instance."""
+    return _get_publisher()
