@@ -69,29 +69,27 @@ class FeatureController:
         return result
     
     @staticmethod
-    def upsert_features(request_data: Dict) -> Dict:
+    def upsert_category(request_data: Dict) -> Dict:
         """
-        Controller for upserting features.
+        Controller for upserting a single category's features.
         
         Args:
-            request_data: Request containing meta and data with identifier and feature_list
+            request_data: Request containing meta and data with entity info, category, and features
             
         Returns:
             Dict containing operation results
         """
-        logger.info("Controller: Upserting features from request data")
+        logger.info("Controller: Upserting single category from request data")
         
         # Extract data (Pydantic already validated structure)
         data = request_data["data"]
         entity_type = data["entity_type"]
         entity_value = data["entity_value"]
-        feature_list = data["feature_list"]
+        category = data["category"]
+        features = data["features"]
         
-        # Convert feature_list to items format
-        items = FeatureServices.convert_feature_list_to_items(feature_list)
-        
-        # Validate items (business rules: category whitelist)
-        FeatureServices.validate_items(items)
+        # Validate single category write (business rules: category whitelist, non-empty features)
+        FeatureServices.validate_single_category_write(category, features)
         
         # Execute flow
-        return FeatureFlows.upsert_features_flow(entity_value, items, entity_type)
+        return FeatureFlows.upsert_category_flow(entity_value, category, features, entity_type)

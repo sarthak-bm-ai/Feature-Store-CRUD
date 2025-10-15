@@ -84,19 +84,22 @@ class WriteRequest(BaseModel):
         if not v:
             raise ValueError('Data cannot be empty')
         
-        required_fields = ['entity_type', 'entity_value', 'feature_list']
+        required_fields = ['entity_type', 'entity_value', 'category', 'features']
         for field in required_fields:
             if field not in v:
                 raise ValueError(f'Missing required field: {field}')
         
         if v['entity_type'] not in ['bright_uid', 'account_id']:
-            raise ValueError('Identifier must be either "bright_uid" or "account_id"')
+            raise ValueError('entity_type must be either "bright_uid" or "account_id"')
         
         if not v['entity_value'] or not isinstance(v['entity_value'], str):
-            raise ValueError('Identifier value must be a non-empty string')
+            raise ValueError('entity_value must be a non-empty string')
         
-        if not v['feature_list'] or not isinstance(v['feature_list'], list):
-            raise ValueError('Feature list must be a non-empty list')
+        if not v['category'] or not isinstance(v['category'], str):
+            raise ValueError('category must be a non-empty string')
+        
+        if not v['features'] or not isinstance(v['features'], dict):
+            raise ValueError('features must be a non-empty dictionary')
         
         return v
 
@@ -136,11 +139,11 @@ class ReadRequest(BaseModel):
 
 # Response models
 class WriteResponse(BaseModel):
-    message: str = Field(..., description="Success message", example="Items written successfully (full replace per category)")
+    message: str = Field(..., description="Success message", example="Category written successfully (full replace)")
     entity_value: str = Field(..., description="User/account identifier", example="user123")
     entity_type: str = Field(..., description="Entity type used", example="bright_uid")
-    results: Dict[str, Dict[str, Any]] = Field(..., description="Results per category")
-    total_features: int = Field(..., description="Total number of features written", example=5)
+    category: str = Field(..., description="Category name", example="d0_unauth_features")
+    feature_count: int = Field(..., description="Number of features written", example=5)
 
 class ReadResponse(BaseModel):
     entity_value: str = Field(..., description="User/account identifier", example="user123")

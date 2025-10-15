@@ -52,7 +52,7 @@ def sample_feature_data():
 
 @pytest.fixture
 def sample_write_request():
-    """Sample write request payload"""
+    """Sample write request payload (single category)"""
     return {
         "meta": {
             "source": "prediction_service"
@@ -60,15 +60,11 @@ def sample_write_request():
         "data": {
             "entity_type": "bright_uid",
             "entity_value": "test-user-123",
-            "feature_list": [
-                {
-                    "category": "d0_unauth_features",
-                    "features": {
-                        "credit_score": 750,
-                        "debt_to_income_ratio": 0.35
-                    }
-                }
-            ]
+            "category": "d0_unauth_features",
+            "features": {
+                "credit_score": 750,
+                "debt_to_income_ratio": 0.35
+            }
         }
     }
 

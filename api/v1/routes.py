@@ -37,14 +37,14 @@ def get_items_by_feature_mapping(request_data: ReadRequestSchema):
             raise HTTPException(status_code=400, detail=str(e))
 
 
-# 3) POST /items write → replace entire features map per category
-# Body: {metadata: {source: "prediction_service"}, data: {entity_type: "bright_uid", entity_value: "user123", feature_list: [{"category": "cat1", "features": {"f1": "v1", "f2": "v2"}}]}}
+# 3) POST /items write → replace entire features for a single category
+# Body: {meta: {source: "prediction_service"}, data: {entity_type: "bright_uid", entity_value: "user123", category: "cat1", features: {"f1": "v1", "f2": "v2"}}}
 @router.post("/items", response_model=WriteResponseSchema)
-@time_function(MetricNames.WRITE_MULTI_CATEGORY)
-def upsert_items(request_data: WriteRequestSchema):
-    """Write/update features with automatic metadata handling."""
+@time_function(MetricNames.WRITE_SINGLE_CATEGORY)
+def upsert_category(request_data: WriteRequestSchema):
+    """Write/update a single category's features with automatic metadata handling."""
     try:
-        return FeatureController.upsert_features(request_data.dict())
+        return FeatureController.upsert_category(request_data.dict())
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

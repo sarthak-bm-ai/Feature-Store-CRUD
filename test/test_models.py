@@ -107,26 +107,23 @@ class TestWriteRequestMeta:
 
 
 class TestWriteRequest:
-    """Tests for WriteRequest model"""
+    """Tests for WriteRequest model (single category writes)"""
     
     def test_write_request_valid(self):
-        """Test valid WriteRequest"""
+        """Test valid WriteRequest with single category"""
         request = WriteRequest(
             meta=WriteRequestMeta(source="prediction_service"),
             data={
                 "entity_type": "bright_uid",
                 "entity_value": "test-123",
-                "feature_list": [
-                    {
-                        "category": "d0_unauth_features",
-                        "features": {"credit_score": 750}
-                    }
-                ]
+                "category": "d0_unauth_features",
+                "features": {"credit_score": 750}
             }
         )
         assert request.data["entity_type"] == "bright_uid"
         assert request.data["entity_value"] == "test-123"
-        assert len(request.data["feature_list"]) == 1
+        assert request.data["category"] == "d0_unauth_features"
+        assert request.data["features"] == {"credit_score": 750}
     
     def test_write_request_invalid_entity_type(self):
         """Test WriteRequest with invalid entity_type"""
@@ -136,7 +133,8 @@ class TestWriteRequest:
                 data={
                     "entity_type": "invalid_type",
                     "entity_value": "test-123",
-                    "feature_list": []
+                    "category": "d0_unauth_features",
+                    "features": {"credit_score": 750}
                 }
             )
         assert "entity_type" in str(exc_info.value)
@@ -195,20 +193,20 @@ class TestReadRequest:
 
 
 class TestWriteResponse:
-    """Tests for WriteResponse model"""
+    """Tests for WriteResponse model (single category writes)"""
     
     def test_write_response_creation(self):
-        """Test creating WriteResponse"""
+        """Test creating WriteResponse for single category"""
         response = WriteResponse(
-            message="Items written successfully",
+            message="Category written successfully (full replace)",
             entity_type="bright_uid",
             entity_value="test-123",
-            results={"d0_unauth_features": {"status": "replaced", "feature_count": 3}},
-            total_features=3
+            category="d0_unauth_features",
+            feature_count=3
         )
-        assert response.message == "Items written successfully"
-        assert "d0_unauth_features" in response.results
-        assert response.total_features == 3
+        assert response.message == "Category written successfully (full replace)"
+        assert response.category == "d0_unauth_features"
+        assert response.feature_count == 3
 
 
 class TestReadResponse:

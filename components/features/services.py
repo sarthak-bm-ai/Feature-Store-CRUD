@@ -2,7 +2,7 @@
 Service layer for feature operations.
 Handles validation, business rules, and data transformation.
 """
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from core.logging_config import get_logger
 from core.settings import settings
 
@@ -157,50 +157,30 @@ class FeatureServices:
         return mapping
     
     @staticmethod
-    def convert_feature_list_to_items(feature_list: List[Dict]) -> Dict[str, Dict]:
+    def validate_single_category_write(category: str, features: Dict[str, Any]) -> None:
         """
-        Convert feature list to items format for write operations.
+        Validate single category write operation.
         
         Args:
-            feature_list: List of feature objects with category and features
+            category: Category name
+            features: Features dictionary
             
-        Returns:
-            Items in format {"cat1": {"f1": "v1", "f2": "v2"}}
+        Raises:
+            ValueError: If validation fails
         """
-        if not feature_list:
-            logger.error("Empty feature list provided")
-            raise ValueError("Feature list cannot be empty")
+        if not isinstance(category, str):
+            logger.error(f"Invalid category type: {type(category)}")
+            raise ValueError(f"Category must be a string, got {type(category)}")
         
-        if not isinstance(feature_list, list):
-            logger.error(f"Invalid feature list type: {type(feature_list)}")
-            raise ValueError("Feature list must be a list")
+        if not isinstance(features, dict):
+            logger.error(f"Invalid features type: {type(features)}")
+            raise ValueError(f"Features must be a dictionary, got {type(features)}")
         
-        items = {}
-        for item in feature_list:
-            if not isinstance(item, dict):
-                logger.error(f"Invalid feature item type: {type(item)}")
-                raise ValueError(f"Feature item must be a dictionary, got {type(item)}")
-            
-            if "category" not in item:
-                logger.error("Missing category in feature item")
-                raise ValueError("Feature item must contain 'category' field")
-            
-            if "features" not in item:
-                logger.error("Missing features in feature item")
-                raise ValueError("Feature item must contain 'features' field")
-            
-            category = item["category"]
-            features = item["features"]
-            
-            if not isinstance(category, str):
-                logger.error(f"Invalid category type: {type(category)}")
-                raise ValueError(f"Category must be a string, got {type(category)}")
-            
-            if not isinstance(features, dict):
-                logger.error(f"Invalid features type: {type(features)}")
-                raise ValueError(f"Features must be a dictionary, got {type(features)}")
-            
-            items[category] = features
+        if len(features) == 0:
+            logger.error("Empty features dictionary")
+            raise ValueError("Features dictionary cannot be empty")
         
-        logger.debug(f"Converted feature list to items: {len(items)} categories")
-        return items
+        # Validate category is in whitelist
+        FeatureServices.validate_category_for_write(category)
+        
+        logger.debug(f"Validated single category write: {category} with {len(features)} features")

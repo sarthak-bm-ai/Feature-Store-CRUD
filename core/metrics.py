@@ -93,9 +93,10 @@ class MetricNames:
     READ_BY_CATEGORY = "read.by_category"
     
     # Write operations
-    WRITE_SINGLE_ITEM = "write.single_item"
-    WRITE_MULTI_CATEGORY = "write.multi_category"
-    WRITE_BY_CATEGORY = "write.by_category"
+    WRITE_SINGLE_CATEGORY = "write.single_category"  # Single category write
+    WRITE_SINGLE_ITEM = "write.single_item"          # Deprecated
+    WRITE_MULTI_CATEGORY = "write.multi_category"    # Deprecated
+    WRITE_BY_CATEGORY = "write.by_category"          # Deprecated
     
     # DynamoDB operations
     DYNAMODB_GET_ITEM = "dynamodb.get_item"

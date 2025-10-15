@@ -194,8 +194,8 @@ class TestGetMultipleCategoriesFlow:
         assert 'missing_category' in result['unavailable_feature_categories']
 
 
-class TestUpsertFeaturesFlow:
-    """Tests for upsert_features_flow"""
+class TestUpsertCategoryFlow:
+    """Tests for upsert_category_flow (single category writes)"""
     
     @patch('components.features.flows.publish_feature_availability_event')
     @patch('components.features.flows.crud')
@@ -203,49 +203,25 @@ class TestUpsertFeaturesFlow:
         """Test upserting single category"""
         mock_publish.return_value = True
         
-        items = {
-            'd0_unauth_features': {
-                'credit_score': 750,
-                'age': 30
-            }
+        features = {
+            'credit_score': 750,
+            'age': 30
         }
         
-        result = FeatureFlows.upsert_features_flow(
+        result = FeatureFlows.upsert_category_flow(
             'test-123',
-            items,
+            'd0_unauth_features',
+            features,
             'bright_uid'
         )
         
         assert 'message' in result
         assert result['entity_value'] == 'test-123'
         assert result['entity_type'] == 'bright_uid'
-        assert 'd0_unauth_features' in result['results']
-        assert result['results']['d0_unauth_features']['status'] == 'replaced'
-        mock_crud.upsert_item_with_meta.assert_called_once()
+        assert result['category'] == 'd0_unauth_features'
+        assert result['feature_count'] == 2
+        mock_crud.upsert_item_with_meta.assert_called_once_with('test-123', 'd0_unauth_features', features, 'bright_uid')
         mock_publish.assert_called_once()
-    
-    @patch('components.features.flows.publish_feature_availability_event')
-    @patch('components.features.flows.crud')
-    def test_upsert_multiple_categories(self, mock_crud, mock_publish):
-        """Test upserting multiple categories"""
-        mock_publish.return_value = True
-        
-        items = {
-            'd0_unauth_features': {'credit_score': 750},
-            'ncr_unauth_features': {'transactions': 10}
-        }
-        
-        result = FeatureFlows.upsert_features_flow(
-            'test-123',
-            items,
-            'bright_uid'
-        )
-        
-        assert len(result['results']) == 2
-        assert 'd0_unauth_features' in result['results']
-        assert 'ncr_unauth_features' in result['results']
-        assert mock_crud.upsert_item_with_meta.call_count == 2
-        assert mock_publish.call_count == 2
     
     @patch('components.features.flows.publish_feature_availability_event')
     @patch('components.features.flows.crud')
@@ -253,19 +229,19 @@ class TestUpsertFeaturesFlow:
         """Test upserting when Kafka publishing fails"""
         mock_publish.return_value = False  # Kafka failed
         
-        items = {
-            'd0_unauth_features': {'credit_score': 750}
-        }
+        features = {'credit_score': 750}
         
         # Should still succeed even if Kafka fails
-        result = FeatureFlows.upsert_features_flow(
+        result = FeatureFlows.upsert_category_flow(
             'test-123',
-            items,
+            'd0_unauth_features',
+            features,
             'bright_uid'
         )
         
         assert 'message' in result
-        assert 'd0_unauth_features' in result['results']
+        assert result['category'] == 'd0_unauth_features'
+        assert result['feature_count'] == 1
     
     @patch('components.features.flows.publish_feature_availability_event')
     @patch('components.features.flows.crud')
@@ -273,18 +249,18 @@ class TestUpsertFeaturesFlow:
         """Test upserting when Kafka raises exception"""
         mock_publish.side_effect = Exception('Kafka connection failed')
         
-        items = {
-            'd0_unauth_features': {'credit_score': 750}
-        }
+        features = {'credit_score': 750}
         
         # Should still succeed even if Kafka throws exception
-        result = FeatureFlows.upsert_features_flow(
+        result = FeatureFlows.upsert_category_flow(
             'test-123',
-            items,
+            'd0_unauth_features',
+            features,
             'bright_uid'
         )
         
         assert 'message' in result
+        assert result['category'] == 'd0_unauth_features'
 
 
 class TestFilterFeatures:

@@ -2,7 +2,7 @@
 Business logic flows for feature operations.
 Separates business logic from API routes for clean architecture.
 """
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 from components.features import crud
 from core.metrics import metrics, MetricNames
 from core.logging_config import get_logger
@@ -123,13 +123,14 @@ class FeatureFlows:
         }
     
     @staticmethod
-    def upsert_features_flow(entity_value: str, items: Dict[str, Dict], entity_type: str) -> Dict:
+    def upsert_category_flow(entity_value: str, category: str, features: Dict[str, Any], entity_type: str) -> Dict:
         """
-        Flow for upserting features with automatic meta handling.
+        Flow for upserting a single category's features with automatic meta handling.
         
         Args:
             entity_value: User/account identifier
-            items: Features data organized by category
+            category: Feature category
+            features: Features data dictionary
             entity_type: Entity type (bright_uid or account_id)
             
         Returns:
@@ -138,70 +139,51 @@ class FeatureFlows:
         Raises:
             ValueError: If validation fails
         """
-        logger.info(f"Upserting features for: {entity_value} to {entity_type}")
+        logger.info(f"Upserting category '{category}' for: {entity_value} to {entity_type}")
         
-        if not items:
-            logger.error("Empty items provided")
+        if not features:
+            logger.error("Empty features provided")
             metrics.increment_counter(
-                f"{MetricNames.WRITE_MULTI_CATEGORY}.error",
-                tags={"error_type": "empty_body", "entity_type": entity_type}
+                f"{MetricNames.WRITE_SINGLE_CATEGORY}.error",
+                tags={"error_type": "empty_features", "entity_type": entity_type, "category": category}
             )
-            raise ValueError("Request body cannot be empty")
+            raise ValueError("Features cannot be empty")
         
-        results: Dict[str, dict] = {}
-        total_features = 0
+        # Upsert with automatic meta handling
+        crud.upsert_item_with_meta(entity_value, category, features, entity_type)
         
-        # Process each category
-        for category, features in items.items():
-            logger.debug(f"Processing category: {category} with {len(features)} features")
-            
-            # Validate features data
-            if not isinstance(features, dict):
-                logger.error(f"Invalid features type for category: {category}")
-                raise ValueError(f"Features for category '{category}' must be a valid object/dictionary")
-            
-            # Upsert with automatic meta handling
-            crud.upsert_item_with_meta(entity_value, category, features, entity_type)
-            
-            # Publish Kafka event after successful upsert
-            try:
-                
-                feature_names = list(features.keys())
-                success = publish_feature_availability_event(
-                    entity_type=entity_type,
-                    entity_value=entity_value,
-                    category=category,
-                    features=feature_names
-                )
-                if success:
-                    logger.info(f"Published Kafka event for {entity_type}:{entity_value} category: {category}")
-                else:
-                    logger.warning(f"Failed to publish Kafka event for {entity_type}:{entity_value} category: {category}")
-            except Exception as e:
-                logger.error(f"Kafka event publishing failed for {category}: {e}")
-                # Don't fail the upsert operation if Kafka fails
-            
-            total_features += len(features)
-            results[category] = {
-                "status": "replaced",
-                "feature_count": len(features)
-            }
-            
-            logger.debug(f"Successfully processed category: {category}")
+        # Publish Kafka event after successful upsert
+        try:
+            feature_names = list(features.keys())
+            success = publish_feature_availability_event(
+                entity_type=entity_type,
+                entity_value=entity_value,
+                category=category,
+                features=feature_names
+            )
+            if success:
+                logger.info(f"Published Kafka event for {entity_type}:{entity_value} category: {category}")
+            else:
+                logger.warning(f"Failed to publish Kafka event for {entity_type}:{entity_value} category: {category}")
+        except Exception as e:
+            logger.error(f"Kafka event publishing failed for {category}: {e}")
+            # Don't fail the upsert operation if Kafka fails
         
         # Record success metrics
         metrics.increment_counter(
-            f"{MetricNames.WRITE_MULTI_CATEGORY}.success",
-            tags={"entity_value": entity_value, "entity_type": entity_type, "categories_count": str(len(items))}
+            f"{MetricNames.WRITE_SINGLE_CATEGORY}.success",
+            tags={"entity_value": entity_value, "entity_type": entity_type, "category": category}
         )
         
-        logger.info(f"Successfully upserted {total_features} features across {len(items)} categories for: {entity_value}")
+        feature_count = len(features)
+        logger.info(f"Successfully upserted {feature_count} features for category '{category}' for: {entity_value}")
+        
         return {
-            "message": "Items written successfully (full replace per category)",
+            "message": "Category written successfully (full replace)",
             "entity_value": entity_value,
             "entity_type": entity_type,
-            "results": results,
-            "total_features": total_features
+            "category": category,
+            "feature_count": feature_count
         }
     
     @staticmethod

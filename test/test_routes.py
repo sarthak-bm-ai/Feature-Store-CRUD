@@ -165,23 +165,18 @@ class TestGetItemsEndpoint:
         assert response.status_code == 422
 
 
-class TestUpsertItemsEndpoint:
-    """Tests for POST /items endpoint"""
+class TestUpsertCategoryEndpoint:
+    """Tests for POST /items endpoint (single category writes)"""
     
-    @patch('api.v1.routes.FeatureController.upsert_features')
-    def test_upsert_items_success(self, mock_upsert):
-        """Test upserting items successfully"""
+    @patch('api.v1.routes.FeatureController.upsert_category')
+    def test_upsert_category_success(self, mock_upsert):
+        """Test upserting single category successfully"""
         mock_upsert.return_value = {
-            'message': 'Features upserted successfully',
+            'message': 'Category written successfully (full replace)',
             'entity_value': 'test-123',
             'entity_type': 'bright_uid',
-            'results': {
-                'd0_unauth_features': {
-                    'status': 'updated',
-                    'features_count': 1
-                }
-            },
-            'total_features': 1
+            'category': 'd0_unauth_features',
+            'feature_count': 1
         }
         
         request_data = {
@@ -189,12 +184,8 @@ class TestUpsertItemsEndpoint:
             'data': {
                 'entity_type': 'bright_uid',
                 'entity_value': 'test-123',
-                'feature_list': [
-                    {
-                        'category': 'd0_unauth_features',
-                        'features': {'credit_score': 750}
-                    }
-                ]
+                'category': 'd0_unauth_features',
+                'features': {'credit_score': 750}
             }
         }
         
@@ -202,23 +193,19 @@ class TestUpsertItemsEndpoint:
         
         assert response.status_code == 200
         data = response.json()
-        assert data['message'] == 'Features upserted successfully'
-        assert 'd0_unauth_features' in data['results']
-        assert data['total_features'] == 1
+        assert data['message'] == 'Category written successfully (full replace)'
+        assert data['category'] == 'd0_unauth_features'
+        assert data['feature_count'] == 1
     
-    def test_upsert_items_invalid_source(self):
+    def test_upsert_category_invalid_source(self):
         """Test upserting with invalid source - Pydantic validation catches this"""
         request_data = {
             'meta': {'source': 'unauthorized'},
             'data': {
                 'entity_type': 'bright_uid',
                 'entity_value': 'test-123',
-                'feature_list': [
-                    {
-                        'category': 'd0_unauth_features',
-                        'features': {'credit_score': 750}
-                    }
-                ]
+                'category': 'd0_unauth_features',
+                'features': {'credit_score': 750}
             }
         }
         
@@ -227,8 +214,8 @@ class TestUpsertItemsEndpoint:
         # Pydantic validation returns 422 for validation errors
         assert response.status_code == 422
     
-    @patch('api.v1.routes.FeatureController.upsert_features')
-    def test_upsert_items_invalid_category(self, mock_upsert):
+    @patch('api.v1.routes.FeatureController.upsert_category')
+    def test_upsert_category_invalid_category(self, mock_upsert):
         """Test upserting with invalid category"""
         mock_upsert.side_effect = ValueError('Category not allowed')
         
@@ -237,12 +224,8 @@ class TestUpsertItemsEndpoint:
             'data': {
                 'entity_type': 'bright_uid',
                 'entity_value': 'test-123',
-                'feature_list': [
-                    {
-                        'category': 'invalid_category',
-                        'features': {'feature': 'value'}
-                    }
-                ]
+                'category': 'invalid_category',
+                'features': {'feature': 'value'}
             }
         }
         

@@ -61,38 +61,20 @@ class TestGetMultipleCategoriesController:
             FeatureController.get_multiple_categories(request_data)
 
 
-class TestUpsertFeaturesController:
-    """Tests for upsert_features controller"""
+class TestUpsertCategoryController:
+    """Tests for upsert_category controller (single category writes)"""
     
     @patch('components.features.controller.FeatureFlows')
     @patch('components.features.controller.FeatureServices')
-    def test_upsert_features_success(self, mock_services, mock_flows):
-        """Test upserting features successfully"""
-        mock_services.validate_request_structure.return_value = (
-            {'source': 'prediction_service'},
-            {
-                'entity_type': 'bright_uid',
-                'entity_value': 'test-123',
-                'feature_list': [
-                    {
-                        'category': 'd0_unauth_features',
-                        'features': {'credit_score': 750}
-                    }
-                ]
-            }
-        )
-        mock_services.validate_source.return_value = None
-        mock_services.sanitize_entity_value.return_value = 'test-123'
-        mock_services.validate_items.return_value = None
-        mock_services.convert_feature_list_to_items.return_value = {
-            'd0_unauth_features': {'credit_score': 750}
-        }
-        mock_flows.upsert_features_flow.return_value = {
-            'message': 'Features upserted successfully',
+    def test_upsert_category_success(self, mock_services, mock_flows):
+        """Test upserting single category successfully"""
+        mock_services.validate_single_category_write.return_value = None
+        mock_flows.upsert_category_flow.return_value = {
+            'message': 'Category written successfully (full replace)',
             'entity_value': 'test-123',
             'entity_type': 'bright_uid',
-            'categories_updated': ['d0_unauth_features'],
-            'timestamp': '2025-10-14T12:34:56.789Z'
+            'category': 'd0_unauth_features',
+            'feature_count': 1
         }
         
         request_data = {
@@ -100,52 +82,36 @@ class TestUpsertFeaturesController:
             'data': {
                 'entity_type': 'bright_uid',
                 'entity_value': 'test-123',
-                'feature_list': [
-                    {
-                        'category': 'd0_unauth_features',
-                        'features': {'credit_score': 750}
-                    }
-                ]
+                'category': 'd0_unauth_features',
+                'features': {'credit_score': 750}
             }
         }
         
-        result = FeatureController.upsert_features(request_data)
+        result = FeatureController.upsert_category(request_data)
         
-        assert result['message'] == 'Features upserted successfully'
-        assert 'd0_unauth_features' in result['categories_updated']
-        # Note: validate_source is done at Pydantic model level, not in controller
-        mock_services.validate_items.assert_called_once()
-        mock_flows.upsert_features_flow.assert_called_once()
+        assert result['message'] == 'Category written successfully (full replace)'
+        assert result['category'] == 'd0_unauth_features'
+        assert result['feature_count'] == 1
+        mock_services.validate_single_category_write.assert_called_once_with('d0_unauth_features', {'credit_score': 750})
+        mock_flows.upsert_category_flow.assert_called_once_with('test-123', 'd0_unauth_features', {'credit_score': 750}, 'bright_uid')
     
     @patch('components.features.controller.FeatureServices')
-    def test_upsert_features_invalid_category(self, mock_services):
+    def test_upsert_category_invalid_category(self, mock_services):
         """Test upserting with invalid category"""
-        mock_services.validate_request_structure.return_value = (
-            {'source': 'prediction_service'},
-            {
-                'entity_type': 'bright_uid',
-                'entity_value': 'test-123',
-                'feature_list': []
-            }
-        )
-        mock_services.convert_feature_list_to_items.return_value = {
-            'invalid_category': {'feature': 'value'}
-        }
-        mock_services.validate_table_type.return_value = None
-        mock_services.sanitize_entity_value.return_value = 'test-123'
-        mock_services.validate_items.side_effect = ValueError('Category not allowed')
+        mock_services.validate_single_category_write.side_effect = ValueError('Category not allowed')
         
         request_data = {
             'meta': {'source': 'prediction_service'},
             'data': {
                 'entity_type': 'bright_uid',
                 'entity_value': 'test-123',
-                'feature_list': []
+                'category': 'invalid_category',
+                'features': {'feature': 'value'}
             }
         }
         
         with pytest.raises(ValueError):
-            FeatureController.upsert_features(request_data)
+            FeatureController.upsert_category(request_data)
 
 
 class TestGetSingleCategoryController:
