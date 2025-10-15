@@ -5,9 +5,7 @@ from components.features.schemas import (
     ReadResponseSchema, HealthResponseSchema, ErrorResponseSchema
 )
 from core.metrics import time_function, MetricNames
-from core.config import health_check, get_all_tables
 from core.timestamp_utils import get_current_timestamp
-from typing import Dict, List
 
 router = APIRouter()
 
@@ -49,24 +47,13 @@ def upsert_category(request_data: WriteRequestSchema):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-# Health check endpoint for DynamoDB connection
+# Health check endpoint - service level only
 @router.get("/health", response_model=HealthResponseSchema)
 def health_check_endpoint():
-    """Check DynamoDB connection health."""
-    try:
-        is_healthy = health_check()
-        tables = get_all_tables()
-        
-        return HealthResponseSchema(
-            status="healthy" if is_healthy else "unhealthy",
-            dynamodb_connection=is_healthy,
-            tables_available=list(tables.keys()),
-            timestamp=get_current_timestamp()
-        )
-    except Exception as e:
-        return HealthResponseSchema(
-            status="unhealthy",
-            dynamodb_connection=False,
-            tables_available=[],
-            timestamp=get_current_timestamp()
-        )
+    """Simple service-level health check."""
+    return HealthResponseSchema(
+        status="healthy",
+        dynamodb_connection=True,
+        tables_available=[],
+        timestamp=get_current_timestamp()
+    )

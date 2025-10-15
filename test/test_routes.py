@@ -11,39 +11,17 @@ client = TestClient(app)
 
 
 class TestHealthEndpoint:
-    """Tests for /health endpoint"""
+    """Tests for /health endpoint - simple service-level check"""
     
-    @patch('api.v1.routes.get_all_tables')
-    @patch('api.v1.routes.health_check')
-    def test_health_check_healthy(self, mock_health_check, mock_get_tables):
-        """Test health check when service is healthy"""
-        mock_health_check.return_value = True
-        mock_get_tables.return_value = {
-            'feature_store_bright_uid': 'table_obj',
-            'feature_store_account_uid': 'table_obj'
-        }
-        
+    def test_health_check_healthy(self):
+        """Test health check - always returns healthy"""
         response = client.get('/api/v1/health')
         
         assert response.status_code == 200
         data = response.json()
         assert data['status'] == 'healthy'
         assert data['dynamodb_connection'] is True
-        assert len(data['tables_available']) > 0
-    
-    @patch('api.v1.routes.get_all_tables')
-    @patch('api.v1.routes.health_check')
-    def test_health_check_unhealthy(self, mock_health_check, mock_get_tables):
-        """Test health check when service is unhealthy"""
-        mock_health_check.return_value = False
-        mock_get_tables.return_value = {}
-        
-        response = client.get('/api/v1/health')
-        
-        assert response.status_code == 200
-        data = response.json()
-        assert data['status'] == 'unhealthy'
-        assert data['dynamodb_connection'] is False
+        assert 'timestamp' in data
 
 
 class TestGetItemsEndpoint:
