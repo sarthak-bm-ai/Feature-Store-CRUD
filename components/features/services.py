@@ -12,56 +12,7 @@ logger = get_logger("feature_services")
 class FeatureServices:
     """Service layer for feature operations."""
     
-    @staticmethod
-    def validate_table_type(table_type: str) -> None:
-        """
-        Validate table type parameter.
-        
-        Args:
-            table_type: Table type to validate
-            
-        Raises:
-            ValueError: If table type is invalid
-        """
-        valid_types = ["bright_uid", "account_id"]
-        if table_type not in valid_types:
-            logger.error(f"Invalid table type: {table_type}")
-            raise ValueError(f"Invalid table_type '{table_type}'. Must be 'bright_uid' or 'account_id'")
-        
-        logger.debug(f"Table type validated: {table_type}")
     
-    @staticmethod
-    def validate_mapping(mapping: Dict[str, List[str]]) -> None:
-        """
-        Validate feature mapping for multi-category reads.
-        
-        Args:
-            mapping: Feature mapping to validate
-            
-        Raises:
-            ValueError: If mapping is invalid
-        """
-        if not mapping:
-            logger.error("Empty mapping provided")
-            raise ValueError("Mapping body cannot be empty")
-        
-        # Validate mapping structure
-        for category, features in mapping.items():
-            if not isinstance(category, str):
-                logger.error(f"Invalid category type: {type(category)}")
-                raise ValueError(f"Category must be a string, got {type(category)}")
-            
-            if not isinstance(features, list):
-                logger.error(f"Invalid features type for category {category}: {type(features)}")
-                raise ValueError(f"Features for category '{category}' must be a list")
-            
-            # Validate feature names are strings
-            for feature in features:
-                if not isinstance(feature, str):
-                    logger.error(f"Invalid feature type in {category}: {type(feature)}")
-                    raise ValueError(f"Feature names must be strings, got {type(feature)}")
-        
-        logger.debug(f"Mapping validated: {len(mapping)} categories")
     
     @staticmethod
     def validate_category_for_write(category: str) -> None:
@@ -89,153 +40,71 @@ class FeatureServices:
     def validate_items(items: Dict[str, Dict]) -> None:
         """
         Validate items for upsert operations.
+        Only validates business rules (category whitelist).
+        Type checking is handled by Pydantic models.
         
         Args:
             items: Items to validate
             
         Raises:
-            ValueError: If items are invalid
+            ValueError: If category is not in allowed list
         """
-        if not items:
-            logger.error("Empty items provided")
-            raise ValueError("Request body cannot be empty")
-        
-        # Validate items structure
-        for category, features in items.items():
-            if not isinstance(category, str):
-                logger.error(f"Invalid category type: {type(category)}")
-                raise ValueError(f"Category must be a string, got {type(category)}")
-            
-            # Validate category is in allowed list for write operations
+        # Only validate business rule: category must be in whitelist
+        for category in items.keys():
             FeatureServices.validate_category_for_write(category)
-            
-            if not isinstance(features, dict):
-                logger.error(f"Invalid features type for category {category}: {type(features)}")
-                raise ValueError(f"Features for category '{category}' must be a valid object/dictionary")
-            
-            # Validate feature data types
-            for feature_name, feature_value in features.items():
-                if not isinstance(feature_name, str):
-                    logger.error(f"Invalid feature name type in {category}: {type(feature_name)}")
-                    raise ValueError(f"Feature names must be strings, got {type(feature_name)}")
-                
-                # Validate feature value types (basic validation)
-                if feature_value is None:
-                    logger.warning(f"Null feature value for {category}.{feature_name}")
-                elif not isinstance(feature_value, (str, int, float, bool, list, dict)):
-                    logger.warning(f"Unusual feature value type for {category}.{feature_name}: {type(feature_value)}")
         
         logger.debug(f"Items validated: {len(items)} categories")
     
-    @staticmethod
-    def sanitize_entity_value(entity_value: str) -> str:
-        """
-        Sanitize entity value for security.
-        
-        Args:
-            entity_value: Entity value to sanitize
-            
-        Returns:
-            Sanitized entity value
-        """
-        if not entity_value:
-            logger.error("Empty entity value provided")
-            raise ValueError("Entity value cannot be empty")
-        
-        if not isinstance(entity_value, str):
-            logger.error(f"Invalid entity value type: {type(entity_value)}")
-            raise ValueError(f"Entity value must be a string, got {type(entity_value)}")
-        
-        # Basic sanitization - remove potentially dangerous characters
-        sanitized = entity_value.strip()
-        
-        # Check for reasonable length
-        if len(sanitized) > 255:
-            logger.warning(f"Very long entity value: {len(sanitized)} characters")
-            sanitized = sanitized[:255]
-        
-        logger.debug(f"Entity value sanitized: {len(entity_value)} -> {len(sanitized)}")
-        return sanitized
     
     @staticmethod
-    def sanitize_category(category: str) -> str:
+    def validate_category_for_read(category: str) -> None:
         """
-        Sanitize category name for security.
+        Validate that category is allowed for read operations.
         
         Args:
-            category: Category to sanitize
-            
-        Returns:
-            Sanitized category
-        """
-        if not category:
-            logger.error("Empty category provided")
-            raise ValueError("Category cannot be empty")
-        
-        if not isinstance(category, str):
-            logger.error(f"Invalid category type: {type(category)}")
-            raise ValueError(f"Category must be a string, got {type(category)}")
-        
-        # Basic sanitization
-        sanitized = category.strip()
-        
-        # Check for reasonable length
-        if len(sanitized) > 100:
-            logger.warning(f"Very long category: {len(sanitized)} characters")
-            sanitized = sanitized[:100]
-        
-        logger.debug(f"Category sanitized: {len(category)} -> {len(sanitized)}")
-        return sanitized
-    
-    @staticmethod
-    def validate_request_structure(request_data: Dict) -> tuple:
-        """
-        Validate and extract meta and data from request.
-        
-        Args:
-            request_data: Request data containing meta and data
-            
-        Returns:
-            Tuple of (meta, data)
+            category: Category name to validate
             
         Raises:
-            ValueError: If request structure is invalid
+            ValueError: If category is not in allowed list
         """
-        if not request_data:
-            logger.error("Empty request data provided")
-            raise ValueError("Request body cannot be empty")
+        allowed_categories = settings.ALLOWED_READ_CATEGORIES
         
-        # Validate top-level structure
-        if "meta" not in request_data:
-            logger.error("Missing meta in request")
-            raise ValueError("Request must contain 'meta' field")
+        if category not in allowed_categories:
+            logger.error(f"Category '{category}' not in allowed read categories: {allowed_categories}")
+            raise ValueError(
+                f"Category '{category}' is not allowed for read operations. "
+                f"Allowed categories: {', '.join(allowed_categories)}"
+            )
         
-        if "data" not in request_data:
-            logger.error("Missing data in request")
-            raise ValueError("Request must contain 'data' field")
+        logger.debug(f"Category validated for read: {category}")
+    
+    @staticmethod
+    def validate_mapping(mapping: Dict[str, List[str]]) -> tuple[Dict[str, List[str]], List[str]]:
+        """
+        Validate categories in mapping and separate valid from invalid ones.
+        For graceful handling: returns valid categories and list of invalid categories.
         
-        meta = request_data["meta"]
-        data = request_data["data"]
+        Args:
+            mapping: Feature mapping to validate
+            
+        Returns:
+            Tuple of (valid_mapping, invalid_categories)
+        """
+        allowed_categories = settings.ALLOWED_READ_CATEGORIES
+        valid_mapping = {}
+        invalid_categories = []
         
-        # Validate meta structure
-        if not isinstance(meta, dict):
-            logger.error(f"Invalid meta type: {type(meta)}")
-            raise ValueError("Meta must be a dictionary")
+        for category, features in mapping.items():
+            if category in allowed_categories:
+                valid_mapping[category] = features
+                logger.debug(f"Category validated for read: {category}")
+            else:
+                invalid_categories.append(category)
+                logger.warning(f"Category '{category}' not in allowed read categories, skipping")
         
-        # Validate data structure
-        if not isinstance(data, dict):
-            logger.error(f"Invalid data type: {type(data)}")
-            raise ValueError("Data must be a dictionary")
-        
-        # Validate required data fields
-        required_fields = ["entity_type", "entity_value", "feature_list"]
-        for field in required_fields:
-            if field not in data:
-                logger.error(f"Missing required field: {field}")
-                raise ValueError(f"Data must contain '{field}' field")
-        
-        logger.debug("Request structure validated successfully")
-        return meta, data
+        logger.debug(f"Mapping validated: {len(valid_mapping)} valid, {len(invalid_categories)} invalid categories")
+        return valid_mapping, invalid_categories
+    
     
     @staticmethod
     def convert_feature_list_to_mapping(feature_list: List[str]) -> Dict[str, List[str]]:

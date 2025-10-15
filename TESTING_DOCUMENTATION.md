@@ -1,8 +1,8 @@
 # Testing Documentation
 
 **Last Updated**: October 15, 2025  
-**Test Suite Status**: ✅ 122/122 Tests Passing (100%)  
-**Execution Time**: ~3 seconds
+**Test Suite Status**: ✅ 119/119 Tests Passing (100%)  
+**Execution Time**: ~3.1 seconds
 
 ---
 
@@ -27,6 +27,7 @@ This document describes the comprehensive test suite for the Feature Store CRUD 
 - **Fast**: Full suite runs in ~3 seconds
 - **Comprehensive**: Tests cover happy paths, error cases, and edge cases
 - **Maintainable**: Clear naming conventions and well-organized test classes
+- **Pydantic-First**: Validation is handled by Pydantic models, reducing custom validation overhead
 
 ---
 
@@ -149,19 +150,8 @@ python -m pytest test/ -v --tb=no
 
 ---
 
-### 2. test_services.py (21 tests)
-**Purpose**: Tests business logic and validation functions in the service layer.
-
-#### ValidateRequestStructure Tests (3 tests)
-- **test_valid_request_structure**: Validates proper request structure with meta and data
-- **test_missing_meta**: Tests error when meta key is missing
-- **test_missing_data**: Tests error when data key is missing
-
-#### SanitizeEntityValue Tests (4 tests)
-- **test_sanitize_normal_string**: Tests basic string sanitization (lowercase, strip)
-- **test_sanitize_string_with_spaces**: Tests leading/trailing space removal
-- **test_sanitize_empty_string**: Tests empty string after stripping
-- **test_sanitize_special_characters**: Tests special character handling
+### 2. test_services.py (18 tests)
+**Purpose**: Tests business logic and data transformation functions in the service layer.
 
 #### ConvertFeatureListToMapping Tests (5 tests)
 - **test_convert_simple_feature_list**: Converts ["cat1:f1", "cat1:f2"] to {cat1: {f1, f2}}
@@ -171,17 +161,25 @@ python -m pytest test/ -v --tb=no
 - **test_convert_empty_list**: Tests error on empty feature list
 
 #### ValidateCategoryForWrite Tests (3 tests)
-- **test_valid_category_d0**: Tests d0_unauth_features is allowed
-- **test_valid_category_ncr**: Tests ncr_unauth_features is allowed
-- **test_invalid_category**: Tests rejection of unauthorized categories
+- **test_valid_category_d0**: Tests d0_unauth_features is allowed for writes
+- **test_valid_category_ncr**: Tests ncr_unauth_features is allowed for writes
+- **test_invalid_category**: Tests rejection of unauthorized categories for writes
 
-#### ValidateItems Tests (6 tests)
-- **test_validate_valid_items**: Tests validation of properly structured items
-- **test_validate_multiple_categories**: Tests multi-category validation
-- **test_validate_invalid_category**: Tests category whitelist enforcement
-- **test_validate_empty_items**: Tests error on empty items dict
-- **test_validate_non_dict_features**: Tests error when features is not a dict
-- **test_validate_non_string_feature_name**: Tests error on non-string feature keys
+#### ValidateCategoryForRead Tests (3 tests)
+- **test_valid_category_d0**: Tests d0_unauth_features is allowed for reads
+- **test_valid_category_ncr**: Tests ncr_unauth_features is allowed for reads
+- **test_invalid_category**: Tests rejection of unauthorized categories for reads
+
+#### ValidateMapping Tests (4 tests)
+- **test_valid_mapping**: Tests validating mapping with single allowed category
+- **test_multiple_valid_categories**: Tests validating mapping with multiple allowed categories
+- **test_invalid_category_in_mapping**: Tests graceful handling - filters out invalid category
+- **test_mixed_valid_and_invalid_categories**: Tests graceful separation of valid and invalid categories
+
+#### ValidateItems Tests (3 tests)
+- **test_validate_valid_items**: Tests validation of properly structured items with allowed category
+- **test_validate_multiple_categories**: Tests validation of multiple allowed categories
+- **test_validate_invalid_category**: Tests category whitelist enforcement (business rule)
 
 ---
 

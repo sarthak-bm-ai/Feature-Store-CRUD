@@ -39,11 +39,14 @@ class Settings:
         self.SCHEMA_REGISTRY = os.getenv("SCHEMA_REGISTRY", "http://10.100.101.102:8081")
         self.TOPIC_NAME = os.getenv("TOPIC_NAME", "FEATURE_AVAILABILITY_EVENTS")
         
-        # Allowed Categories for Write Operations
-        self.ALLOWED_WRITE_CATEGORIES = [
+        # Allowed Categories for Operations
+        self.ALLOWED_CATEGORIES = [
             "d0_unauth_features",
             "ncr_unauth_features"
         ]
+        # Same categories for both read and write
+        self.ALLOWED_WRITE_CATEGORIES = self.ALLOWED_CATEGORIES
+        self.ALLOWED_READ_CATEGORIES = self.ALLOWED_CATEGORIES
         
     def get_table_name(self, table_type: str) -> str:
         """Get table name based on table type."""

@@ -14,18 +14,14 @@ class TestGetMultipleCategoriesController:
     @patch('components.features.controller.FeatureServices')
     def test_get_multiple_categories_success(self, mock_services, mock_flows):
         """Test getting multiple categories successfully"""
-        mock_services.validate_request_structure.return_value = (
-            {'source': 'api'},
-            {
-                'entity_type': 'bright_uid',
-                'entity_value': 'test-123',
-                'feature_list': ['d0_unauth_features:credit_score']
-            }
-        )
-        mock_services.sanitize_entity_value.return_value = 'test-123'
         mock_services.convert_feature_list_to_mapping.return_value = {
             'd0_unauth_features': ['credit_score']
         }
+        # Mock validate_mapping to return valid mapping and no invalid categories
+        mock_services.validate_mapping.return_value = (
+            {'d0_unauth_features': ['credit_score']},  # valid_mapping
+            []  # invalid_categories
+        )
         mock_flows.get_multiple_categories_flow.return_value = {
             'entity_value': 'test-123',
             'entity_type': 'bright_uid',
@@ -54,17 +50,14 @@ class TestGetMultipleCategoriesController:
         
         assert result['entity_value'] == 'test-123'
         assert 'd0_unauth_features' in result['items']
-        mock_services.validate_request_structure.assert_called_once_with(request_data)
+        assert result['unavailable_feature_categories'] == []
         mock_flows.get_multiple_categories_flow.assert_called_once()
     
-    @patch('components.features.controller.FeatureServices')
-    def test_get_multiple_categories_invalid_structure(self, mock_services):
-        """Test with invalid request structure"""
-        mock_services.validate_request_structure.side_effect = ValueError('Invalid request structure')
+    def test_get_multiple_categories_invalid_structure(self):
+        """Test with invalid request structure - should raise KeyError"""
+        request_data = {'invalid': 'data'}  # Missing 'data' key
         
-        request_data = {'invalid': 'data'}
-        
-        with pytest.raises(ValueError):
+        with pytest.raises(KeyError):
             FeatureController.get_multiple_categories(request_data)
 
 

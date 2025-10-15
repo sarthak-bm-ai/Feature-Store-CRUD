@@ -28,10 +28,8 @@ class FeatureController:
         """
         logger.info(f"Controller: Getting single category {entity_value}/{category}")
         
-        # Validate inputs
-        FeatureServices.validate_table_type(entity_type)
-        entity_value = FeatureServices.sanitize_entity_value(entity_value)
-        category = FeatureServices.sanitize_category(category)
+        # Validate category is in whitelist (path parameter, not validated by Pydantic)
+        FeatureServices.validate_category_for_read(category)
         
         # Execute flow
         return FeatureFlows.get_single_category_flow(entity_value, category, entity_type)
@@ -49,8 +47,8 @@ class FeatureController:
         """
         logger.info("Controller: Getting multiple categories from request data")
         
-        # Extract and validate request data
-        meta, data = FeatureServices.validate_request_structure(request_data)
+        # Extract data (Pydantic already validated structure)
+        data = request_data["data"]
         entity_type = data["entity_type"]
         entity_value = data["entity_value"]
         feature_list = data["feature_list"]
@@ -58,13 +56,17 @@ class FeatureController:
         # Convert feature_list to mapping format
         mapping = FeatureServices.convert_feature_list_to_mapping(feature_list)
         
-        # Validate inputs
-        FeatureServices.validate_table_type(entity_type)
-        entity_value = FeatureServices.sanitize_entity_value(entity_value)
-        FeatureServices.validate_mapping(mapping)
+        # Validate categories are in whitelist (business rule)
+        # Returns valid categories and list of invalid ones for graceful handling
+        valid_mapping, invalid_categories = FeatureServices.validate_mapping(mapping)
         
-        # Execute flow
-        return FeatureFlows.get_multiple_categories_flow(entity_value, mapping, entity_type)
+        # Execute flow with valid categories only (no DB calls for invalid categories)
+        result = FeatureFlows.get_multiple_categories_flow(entity_value, valid_mapping, entity_type)
+        
+        # Add invalid categories to unavailable list (no DB calls made for these)
+        result['unavailable_feature_categories'].extend(invalid_categories)
+        
+        return result
     
     @staticmethod
     def upsert_features(request_data: Dict) -> Dict:
@@ -79,8 +81,8 @@ class FeatureController:
         """
         logger.info("Controller: Upserting features from request data")
         
-        # Extract and validate request data
-        meta, data = FeatureServices.validate_request_structure(request_data)
+        # Extract data (Pydantic already validated structure)
+        data = request_data["data"]
         entity_type = data["entity_type"]
         entity_value = data["entity_value"]
         feature_list = data["feature_list"]
@@ -88,9 +90,7 @@ class FeatureController:
         # Convert feature_list to items format
         items = FeatureServices.convert_feature_list_to_items(feature_list)
         
-        # Validate inputs
-        FeatureServices.validate_table_type(entity_type)
-        entity_value = FeatureServices.sanitize_entity_value(entity_value)
+        # Validate items (business rules: category whitelist)
         FeatureServices.validate_items(items)
         
         # Execute flow

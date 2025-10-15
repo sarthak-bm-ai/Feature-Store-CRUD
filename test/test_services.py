@@ -5,68 +5,6 @@ import pytest
 from components.features.services import FeatureServices
 
 
-class TestValidateRequestStructure:
-    """Tests for validate_request_structure"""
-    
-    def test_valid_request_structure(self):
-        """Test validating valid request structure"""
-        request_data = {
-            "meta": {"source": "api"},
-            "data": {
-                "entity_type": "bright_uid",
-                "entity_value": "test-123",
-                "feature_list": ["d0_unauth_features:credit_score"]
-            }
-        }
-        meta, data = FeatureServices.validate_request_structure(request_data)
-        assert meta == {"source": "api"}
-        assert data["entity_type"] == "bright_uid"
-        assert "feature_list" in data
-    
-    def test_missing_meta(self):
-        """Test request missing meta"""
-        request_data = {
-            "data": {"entity_type": "bright_uid", "entity_value": "test-123"}
-        }
-        with pytest.raises(ValueError) as exc_info:
-            FeatureServices.validate_request_structure(request_data)
-        assert "meta" in str(exc_info.value).lower()
-    
-    def test_missing_data(self):
-        """Test request missing data"""
-        request_data = {
-            "meta": {"source": "api"}
-        }
-        with pytest.raises(ValueError) as exc_info:
-            FeatureServices.validate_request_structure(request_data)
-        assert "data" in str(exc_info.value).lower()
-
-
-class TestSanitizeEntityValue:
-    """Tests for sanitize_entity_value"""
-    
-    def test_sanitize_normal_string(self):
-        """Test sanitizing normal string"""
-        result = FeatureServices.sanitize_entity_value("test-user-123")
-        assert result == "test-user-123"
-    
-    def test_sanitize_string_with_spaces(self):
-        """Test sanitizing string with spaces"""
-        result = FeatureServices.sanitize_entity_value("  test user  ")
-        assert result == "test user"
-    
-    def test_sanitize_empty_string(self):
-        """Test sanitizing whitespace-only string becomes empty"""
-        # Whitespace-only string passes initial check, then becomes empty after strip
-        result = FeatureServices.sanitize_entity_value("  ")
-        assert result == ""
-    
-    def test_sanitize_special_characters(self):
-        """Test sanitizing with special characters"""
-        result = FeatureServices.sanitize_entity_value("test@user#123")
-        assert result == "test@user#123"
-
-
 class TestConvertFeatureListToMapping:
     """Tests for convert_feature_list_to_mapping"""
     
@@ -137,11 +75,80 @@ class TestValidateCategoryForWrite:
         assert "ncr_unauth_features" in str(exc_info.value)
 
 
+class TestValidateCategoryForRead:
+    """Tests for validate_category_for_read"""
+    
+    def test_valid_category_d0(self):
+        """Test valid category d0_unauth_features for read"""
+        # Should not raise exception
+        FeatureServices.validate_category_for_read("d0_unauth_features")
+    
+    def test_valid_category_ncr(self):
+        """Test valid category ncr_unauth_features for read"""
+        # Should not raise exception
+        FeatureServices.validate_category_for_read("ncr_unauth_features")
+    
+    def test_invalid_category(self):
+        """Test invalid category for read"""
+        with pytest.raises(ValueError) as exc_info:
+            FeatureServices.validate_category_for_read("invalid_category")
+        assert "not allowed" in str(exc_info.value)
+        assert "d0_unauth_features" in str(exc_info.value)
+        assert "ncr_unauth_features" in str(exc_info.value)
+
+
+class TestValidateMapping:
+    """Tests for validate_mapping - graceful handling of valid and invalid categories"""
+    
+    def test_valid_mapping(self):
+        """Test validating mapping with allowed categories"""
+        mapping = {
+            "d0_unauth_features": ["credit_score", "age"]
+        }
+        valid_mapping, invalid_categories = FeatureServices.validate_mapping(mapping)
+        assert valid_mapping == mapping
+        assert invalid_categories == []
+    
+    def test_multiple_valid_categories(self):
+        """Test validating mapping with multiple allowed categories"""
+        mapping = {
+            "d0_unauth_features": ["credit_score"],
+            "ncr_unauth_features": ["transactions"]
+        }
+        valid_mapping, invalid_categories = FeatureServices.validate_mapping(mapping)
+        assert valid_mapping == mapping
+        assert invalid_categories == []
+    
+    def test_invalid_category_in_mapping(self):
+        """Test validating mapping with invalid category - filters it out"""
+        mapping = {
+            "invalid_category": ["feature1"]
+        }
+        valid_mapping, invalid_categories = FeatureServices.validate_mapping(mapping)
+        assert valid_mapping == {}
+        assert invalid_categories == ["invalid_category"]
+    
+    def test_mixed_valid_and_invalid_categories(self):
+        """Test graceful handling of mixed valid and invalid categories"""
+        mapping = {
+            "d0_unauth_features": ["credit_score"],
+            "invalid_category": ["feature1"],
+            "ncr_unauth_features": ["transactions"],
+            "another_invalid": ["feature2"]
+        }
+        valid_mapping, invalid_categories = FeatureServices.validate_mapping(mapping)
+        assert "d0_unauth_features" in valid_mapping
+        assert "ncr_unauth_features" in valid_mapping
+        assert "invalid_category" not in valid_mapping
+        assert "another_invalid" not in valid_mapping
+        assert set(invalid_categories) == {"invalid_category", "another_invalid"}
+
+
 class TestValidateItems:
-    """Tests for validate_items"""
+    """Tests for validate_items - only validates business rules (category whitelist)"""
     
     def test_validate_valid_items(self):
-        """Test validating valid items"""
+        """Test validating valid items with allowed category"""
         items = {
             "d0_unauth_features": {"credit_score": 750, "age": 30}
         }
@@ -149,7 +156,7 @@ class TestValidateItems:
         FeatureServices.validate_items(items)
     
     def test_validate_multiple_categories(self):
-        """Test validating multiple categories"""
+        """Test validating multiple allowed categories"""
         items = {
             "d0_unauth_features": {"credit_score": 750},
             "ncr_unauth_features": {"transactions": 10}
@@ -158,38 +165,13 @@ class TestValidateItems:
         FeatureServices.validate_items(items)
     
     def test_validate_invalid_category(self):
-        """Test validating with invalid category"""
+        """Test validating with invalid category (not in whitelist)"""
         items = {
             "invalid_category": {"feature": "value"}
         }
         with pytest.raises(ValueError) as exc_info:
             FeatureServices.validate_items(items)
         assert "not allowed" in str(exc_info.value)
-    
-    def test_validate_empty_items(self):
-        """Test validating with empty items dict"""
-        items = {}
-        with pytest.raises(ValueError) as exc_info:
-            FeatureServices.validate_items(items)
-        assert "empty" in str(exc_info.value).lower()
-    
-    def test_validate_non_dict_features(self):
-        """Test validating with non-dict features"""
-        items = {
-            "d0_unauth_features": "not_a_dict"
-        }
-        with pytest.raises(ValueError) as exc_info:
-            FeatureServices.validate_items(items)
-        assert "dictionary" in str(exc_info.value).lower()
-    
-    def test_validate_non_string_feature_name(self):
-        """Test validating with non-string feature name"""
-        items = {
-            "d0_unauth_features": {123: "value"}
-        }
-        with pytest.raises(ValueError) as exc_info:
-            FeatureServices.validate_items(items)
-        assert "string" in str(exc_info.value).lower()
 
 
 
