@@ -12,7 +12,7 @@ router = APIRouter()
 # 1) GET /get/item/{entity_value}/{category} → return all features of that category
 @router.get("/get/item/{entity_value}/{category}")
 @time_function(MetricNames.READ_SINGLE_ITEM)
-def get_category_features(entity_value: str, category: str, entity_type: str = Query(default="bright_uid", description="Entity type: 'bright_uid' or 'account_id'")):
+def get_category_features(entity_value: str, category: str, entity_type: str = Query(default="bright_uid", description="Entity type: 'bright_uid' or 'account_pid'")):
     """Get all features for a specific category."""
     try:
         return FeatureController.get_single_category(entity_value, category, entity_type)

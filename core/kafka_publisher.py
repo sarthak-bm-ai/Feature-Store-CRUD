@@ -72,7 +72,7 @@ class FeatureEventPublisher:
         Create the event payload structure.
         
         Args:
-            entity_type: Type of entity (bright_uid/account_id)
+            entity_type: Type of entity (bright_uid/account_pid)
             entity_value: Entity identifier
             category: Feature category
             features: List of feature names
@@ -100,7 +100,7 @@ class FeatureEventPublisher:
         Publish feature availability event to Kafka.
         
         Args:
-            entity_type: Type of entity (bright_uid/account_id)
+            entity_type: Type of entity (bright_uid/account_pid)
             entity_value: Entity identifier
             category: Feature category
             features: List of feature names

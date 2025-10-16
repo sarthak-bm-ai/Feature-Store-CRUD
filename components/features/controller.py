@@ -21,7 +21,7 @@ class FeatureController:
         Args:
             entity_value: User/account identifier
             category: Feature category
-            entity_type: Entity type (bright_uid or account_id)
+            entity_type: Entity type (bright_uid or account_pid)
             
         Returns:
             Dict containing the item data

@@ -65,7 +65,7 @@ def dict_to_dynamodb(python_dict: dict) -> dict:
 
 @time_function(MetricNames.DYNAMODB_GET_ITEM)
 def get_item(identifier: str, category: str, table_type: str = "bright_uid"):
-    """Get item from specified table type (bright_uid or account_id)"""
+    """Get item from specified table type (bright_uid or account_pid)"""
     try:
         table = get_table(table_type)
         

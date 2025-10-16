@@ -71,8 +71,8 @@ class DynamoDBSingleton:
                         
                         if table_type == "bright_uid":
                             table_name = settings.TABLE_NAME_BRIGHT_UID
-                        elif table_type == "account_id":
-                            table_name = settings.TABLE_NAME_ACCOUNT_ID
+                        elif table_type == "account_pid":
+                            table_name = settings.TABLE_NAME_ACCOUNT_PID
                         else:
                             raise ValueError(f"Invalid table_type: {table_type}")
                         
@@ -88,7 +88,7 @@ class DynamoDBSingleton:
     def get_all_tables(self) -> Dict[str, any]:
         """Get all table instances."""
         tables = {}
-        for table_type in ["bright_uid", "account_id"]:
+        for table_type in ["bright_uid", "account_pid"]:
             tables[table_type] = self.get_table(table_type)
         return tables
     
@@ -138,5 +138,5 @@ def reset_connection():
 # Table mapping for easy access (backward compatibility)
 TABLES = {
     "bright_uid": lambda: get_table("bright_uid"),
-    "account_id": lambda: get_table("account_id")
+    "account_pid": lambda: get_table("account_pid")
 }

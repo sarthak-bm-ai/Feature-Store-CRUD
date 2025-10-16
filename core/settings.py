@@ -19,7 +19,7 @@ class Settings:
         # AWS Configuration
         self.AWS_REGION = os.getenv("AWS_REGION", "us-west-2")
         self.TABLE_NAME_BRIGHT_UID = os.getenv("TABLE_NAME_BRIGHT_UID", "user_feature_store")
-        self.TABLE_NAME_ACCOUNT_ID = os.getenv("TABLE_NAME_ACCOUNT_ID", "account_feature_store")
+        self.TABLE_NAME_ACCOUNT_PID = os.getenv("TABLE_NAME_ACCOUNT_PID", "account_feature_store")
         
         # StatsD Configuration
         self.STATSD_HOST = os.getenv("STATSD_HOST", "localhost")
@@ -52,8 +52,8 @@ class Settings:
         """Get table name based on table type."""
         if table_type == "bright_uid":
             return self.TABLE_NAME_BRIGHT_UID
-        elif table_type == "account_id":
-            return self.TABLE_NAME_ACCOUNT_ID
+        elif table_type == "account_pid":
+            return self.TABLE_NAME_ACCOUNT_PID
         else:
             raise ValueError(f"Invalid table_type: {table_type}")
     

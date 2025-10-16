@@ -67,12 +67,12 @@ class TestGetItem:
             crud.get_item('test-123', 'd0_unauth_features', 'bright_uid')
     
     @patch('components.features.crud.get_table')
-    def test_get_item_account_uid(self, mock_get_table):
-        """Test getting item with account_uid"""
+    def test_get_item_account_pid(self, mock_get_table):
+        """Test getting item with account_pid"""
         mock_table = MagicMock()
         mock_table.get_item.return_value = {
             'Item': {
-                'account_uid': 'account-123',
+                'account_pid': 'account-123',
                 'category': 'd0_unauth_features',
                 'features': {
                     'data': {'age': Decimal('30')},
@@ -86,10 +86,10 @@ class TestGetItem:
         }
         mock_get_table.return_value = mock_table
         
-        result = crud.get_item('account-123', 'd0_unauth_features', 'account_uid')
+        result = crud.get_item('account-123', 'd0_unauth_features', 'account_pid')
         
         assert result is not None
-        assert result['account_uid'] == 'account-123'
+        assert result['account_pid'] == 'account-123'
         assert result['features']['data']['age'] == 30.0
 
 

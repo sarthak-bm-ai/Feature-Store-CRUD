@@ -38,7 +38,7 @@ class Features(BaseModel):
 
 class Item(BaseModel):
     bright_uid: Optional[str] = None
-    account_id: Optional[str] = None
+    account_pid: Optional[str] = None
     category: str
     features: Features
 
@@ -89,8 +89,8 @@ class WriteRequest(BaseModel):
             if field not in v:
                 raise ValueError(f'Missing required field: {field}')
         
-        if v['entity_type'] not in ['bright_uid', 'account_id']:
-            raise ValueError('entity_type must be either "bright_uid" or "account_id"')
+        if v['entity_type'] not in ['bright_uid', 'account_pid']:
+            raise ValueError('entity_type must be either "bright_uid" or "account_pid"')
         
         if not v['entity_value'] or not isinstance(v['entity_value'], str):
             raise ValueError('entity_value must be a non-empty string')
@@ -117,8 +117,8 @@ class ReadRequest(BaseModel):
             if field not in v:
                 raise ValueError(f'Missing required field: {field}')
         
-        if v['entity_type'] not in ['bright_uid', 'account_id']:
-            raise ValueError('Identifier must be either "bright_uid" or "account_id"')
+        if v['entity_type'] not in ['bright_uid', 'account_pid']:
+            raise ValueError('Identifier must be either "bright_uid" or "account_pid"')
         
         if not v['entity_value'] or not isinstance(v['entity_value'], str):
             raise ValueError('Identifier value must be a non-empty string')
@@ -154,7 +154,7 @@ class ReadResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str = Field(..., description="Health status", example="healthy")
     dynamodb_connection: bool = Field(..., description="DynamoDB connection status", example=True)
-    tables_available: List[str] = Field(..., description="Available tables", example=["bright_uid", "account_id"])
+    tables_available: List[str] = Field(..., description="Available tables", example=["bright_uid", "account_pid"])
     timestamp: str = Field(..., description="Response timestamp", example="2025-10-08T19:17:20.239310")
 
 class ErrorResponse(BaseModel):

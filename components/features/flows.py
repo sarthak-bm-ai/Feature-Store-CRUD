@@ -22,7 +22,7 @@ class FeatureFlows:
         Args:
             entity_value: User/account identifier
             category: Feature category
-            entity_type: Entity type (bright_uid or account_id)
+            entity_type: Entity type (bright_uid or account_pid)
             
         Returns:
             Dict containing the item data
@@ -60,7 +60,7 @@ class FeatureFlows:
         Args:
             entity_value: User/account identifier
             mapping: Category to features mapping for filtering
-            entity_type: Entity type (bright_uid or account_id)
+            entity_type: Entity type (bright_uid or account_pid)
             
         Returns:
             Dict containing results and unavailable_feature_categories
@@ -131,7 +131,7 @@ class FeatureFlows:
             entity_value: User/account identifier
             category: Feature category
             features: Features data dictionary
-            entity_type: Entity type (bright_uid or account_id)
+            entity_type: Entity type (bright_uid or account_pid)
             
         Returns:
             Dict containing operation results
