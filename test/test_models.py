@@ -98,6 +98,13 @@ class TestWriteRequestMeta:
         """Test WriteRequestMeta with prediction_service"""
         meta = WriteRequestMeta(source="prediction_service")
         assert meta.source == "prediction_service"
+        assert meta.compute_id is None
+    
+    def test_write_request_meta_with_compute_id(self):
+        """Test WriteRequestMeta with compute_id"""
+        meta = WriteRequestMeta(source="prediction_service", compute_id="test-compute-123")
+        assert meta.source == "prediction_service"
+        assert meta.compute_id == "test-compute-123"
     
     def test_write_request_meta_invalid_source(self):
         """Test WriteRequestMeta rejects invalid source"""

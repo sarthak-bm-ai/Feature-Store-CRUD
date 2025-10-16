@@ -78,7 +78,7 @@ class TestUpsertCategoryController:
         }
         
         request_data = {
-            'meta': {'source': 'prediction_service'},
+            'meta': {'source': 'prediction_service', 'compute_id': 'test-compute-123'},
             'data': {
                 'entity_type': 'bright_uid',
                 'entity_value': 'test-123',
@@ -93,7 +93,7 @@ class TestUpsertCategoryController:
         assert result['category'] == 'd0_unauth_features'
         assert result['feature_count'] == 1
         mock_services.validate_single_category_write.assert_called_once_with('d0_unauth_features', {'credit_score': 750})
-        mock_flows.upsert_category_flow.assert_called_once_with('test-123', 'd0_unauth_features', {'credit_score': 750}, 'bright_uid')
+        mock_flows.upsert_category_flow.assert_called_once_with('test-123', 'd0_unauth_features', {'credit_score': 750}, 'bright_uid', 'test-compute-123')
     
     @patch('components.features.controller.FeatureServices')
     def test_upsert_category_invalid_category(self, mock_services):

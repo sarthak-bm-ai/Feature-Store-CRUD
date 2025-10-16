@@ -81,6 +81,10 @@ class FeatureController:
         """
         logger.info("Controller: Upserting single category from request data")
         
+        # Extract metadata (compute_id)
+        meta = request_data.get("meta", {})
+        compute_id = meta.get("compute_id")
+        
         # Extract data (Pydantic already validated structure)
         data = request_data["data"]
         entity_type = data["entity_type"]
@@ -91,5 +95,5 @@ class FeatureController:
         # Validate single category write (business rules: category whitelist, non-empty features)
         FeatureServices.validate_single_category_write(category, features)
         
-        # Execute flow
-        return FeatureFlows.upsert_category_flow(entity_value, category, features, entity_type)
+        # Execute flow with compute_id
+        return FeatureFlows.upsert_category_flow(entity_value, category, features, entity_type, compute_id)

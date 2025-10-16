@@ -134,8 +134,8 @@ def put_item(item_data: dict, table_type: str = "bright_uid"):
 
 
 @time_function(MetricNames.DYNAMODB_UPDATE_ITEM)
-def upsert_item_with_meta(identifier: str, category: str, features_data: dict, table_type: str = "bright_uid"):
-    """Upsert item with automatic meta handling - preserves created_at, updates updated_at."""
+def upsert_item_with_meta(identifier: str, category: str, features_data: dict, table_type: str = "bright_uid", compute_id: str = None):
+    """Upsert item with automatic meta handling - preserves created_at, updates updated_at, and stores compute_id."""
     try:
         table = get_table(table_type)
         
@@ -160,7 +160,7 @@ def upsert_item_with_meta(identifier: str, category: str, features_data: dict, t
         meta = FeatureMeta(
             created_at=created_at,
             updated_at=now,
-            compute_id="None"
+            compute_id=compute_id
         )
         features_obj = Features(
             data=features_data,

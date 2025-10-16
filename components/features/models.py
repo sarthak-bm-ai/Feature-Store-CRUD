@@ -48,6 +48,7 @@ class RequestMeta(BaseModel):
 
 class WriteRequestMeta(BaseModel):
     source: str = Field(..., description="Source of the request", example="prediction_service")
+    compute_id: Optional[str] = Field(None, description="ID of the compute job that generated the features")
     
     @validator('source')
     def validate_source(cls, v):

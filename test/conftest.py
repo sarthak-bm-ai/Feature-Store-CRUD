@@ -55,7 +55,8 @@ def sample_write_request():
     """Sample write request payload (single category)"""
     return {
         "meta": {
-            "source": "prediction_service"
+            "source": "prediction_service",
+            "compute_id": "test-compute-123"
         },
         "data": {
             "entity_type": "bright_uid",
@@ -100,7 +101,7 @@ def sample_dynamodb_item():
             "meta": {
                 "created_at": "2025-10-14T12:34:56.789Z",
                 "updated_at": "2025-10-14T12:34:56.789Z",
-                "compute_id": None
+                "compute_id": "test-compute-123"
             }
         }
     }

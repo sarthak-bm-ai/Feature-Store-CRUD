@@ -158,7 +158,7 @@ class TestUpsertCategoryEndpoint:
         }
         
         request_data = {
-            'meta': {'source': 'prediction_service'},
+            'meta': {'source': 'prediction_service', 'compute_id': 'test-compute-123'},
             'data': {
                 'entity_type': 'bright_uid',
                 'entity_value': 'test-123',
@@ -198,7 +198,7 @@ class TestUpsertCategoryEndpoint:
         mock_upsert.side_effect = ValueError('Category not allowed')
         
         request_data = {
-            'meta': {'source': 'prediction_service'},
+            'meta': {'source': 'prediction_service', 'compute_id': None},
             'data': {
                 'entity_type': 'bright_uid',
                 'entity_value': 'test-123',

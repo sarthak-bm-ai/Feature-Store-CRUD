@@ -212,7 +212,8 @@ class TestUpsertCategoryFlow:
             'test-123',
             'd0_unauth_features',
             features,
-            'bright_uid'
+            'bright_uid',
+            'test-compute-123'
         )
         
         assert 'message' in result
@@ -220,7 +221,7 @@ class TestUpsertCategoryFlow:
         assert result['entity_type'] == 'bright_uid'
         assert result['category'] == 'd0_unauth_features'
         assert result['feature_count'] == 2
-        mock_crud.upsert_item_with_meta.assert_called_once_with('test-123', 'd0_unauth_features', features, 'bright_uid')
+        mock_crud.upsert_item_with_meta.assert_called_once_with('test-123', 'd0_unauth_features', features, 'bright_uid', 'test-compute-123')
         mock_publish.assert_called_once()
     
     @patch('components.features.flows.publish_feature_availability_event')
@@ -236,7 +237,8 @@ class TestUpsertCategoryFlow:
             'test-123',
             'd0_unauth_features',
             features,
-            'bright_uid'
+            'bright_uid',
+            None
         )
         
         assert 'message' in result
@@ -256,7 +258,8 @@ class TestUpsertCategoryFlow:
             'test-123',
             'd0_unauth_features',
             features,
-            'bright_uid'
+            'bright_uid',
+            None
         )
         
         assert 'message' in result

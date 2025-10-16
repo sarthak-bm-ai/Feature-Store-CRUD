@@ -123,7 +123,7 @@ class FeatureFlows:
         }
     
     @staticmethod
-    def upsert_category_flow(entity_value: str, category: str, features: Dict[str, Any], entity_type: str) -> Dict:
+    def upsert_category_flow(entity_value: str, category: str, features: Dict[str, Any], entity_type: str, compute_id: Optional[str] = None) -> Dict:
         """
         Flow for upserting a single category's features with automatic meta handling.
         
@@ -132,6 +132,7 @@ class FeatureFlows:
             category: Feature category
             features: Features data dictionary
             entity_type: Entity type (bright_uid or account_pid)
+            compute_id: Optional ID of the compute job that generated the features
             
         Returns:
             Dict containing operation results
@@ -139,7 +140,7 @@ class FeatureFlows:
         Raises:
             ValueError: If validation fails
         """
-        logger.info(f"Upserting category '{category}' for: {entity_value} to {entity_type}")
+        logger.info(f"Upserting category '{category}' for: {entity_value} to {entity_type} with compute_id: {compute_id}")
         
         if not features:
             logger.error("Empty features provided")
@@ -149,8 +150,8 @@ class FeatureFlows:
             )
             raise ValueError("Features cannot be empty")
         
-        # Upsert with automatic meta handling
-        crud.upsert_item_with_meta(entity_value, category, features, entity_type)
+        # Upsert with automatic meta handling, including compute_id
+        crud.upsert_item_with_meta(entity_value, category, features, entity_type, compute_id)
         
         # Publish Kafka event after successful upsert
         try:
