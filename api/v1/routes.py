@@ -6,6 +6,7 @@ from components.features.schemas import (
 )
 from core.metrics import time_function, MetricNames
 from core.timestamp_utils import get_current_timestamp
+from core.exceptions import categorize_error, FeatureStoreException
 
 router = APIRouter()
 
@@ -16,8 +17,9 @@ def get_category_features(entity_value: str, category: str, entity_type: str = Q
     """Get all features for a specific category."""
     try:
         return FeatureController.get_single_category(entity_value, category, entity_type)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        categorized_error = categorize_error(e)
+        raise HTTPException(status_code=categorized_error.status_code, detail=categorized_error.message)
 
 
 # 2) POST /get/items with body containing entity_type and mapping
@@ -28,11 +30,9 @@ def get_items_by_feature_mapping(request_data: ReadRequestSchema):
     """Get filtered features from multiple categories."""
     try:
         return FeatureController.get_multiple_categories(request_data.dict())
-    except ValueError as e:
-        if "not found" in str(e).lower():
-            raise HTTPException(status_code=404, detail=str(e))
-        else:
-            raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        categorized_error = categorize_error(e)
+        raise HTTPException(status_code=categorized_error.status_code, detail=categorized_error.message)
 
 
 # 3) POST /items write → replace entire features for a single category
@@ -43,8 +43,9 @@ def upsert_category(request_data: WriteRequestSchema):
     """Write/update a single category's features with automatic metadata handling."""
     try:
         return FeatureController.upsert_category(request_data.dict())
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        categorized_error = categorize_error(e)
+        raise HTTPException(status_code=categorized_error.status_code, detail=categorized_error.message)
 
 
 # Health check endpoint - service level only

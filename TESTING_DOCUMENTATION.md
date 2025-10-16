@@ -1,8 +1,8 @@
 # Testing Documentation
 
-**Last Updated**: October 15, 2025  
-**Test Suite Status**: ✅ 119/119 Tests Passing (100%)  
-**Execution Time**: ~3.1 seconds
+**Last Updated**: October 16, 2025  
+**Test Suite Status**: ✅ 138/138 Tests Passing (100%)  
+**Execution Time**: ~1.3 seconds
 
 ---
 
@@ -48,7 +48,8 @@ test/
 ├── test_controller.py          # Controller layer tests
 ├── test_routes.py              # API endpoint integration tests
 ├── test_kafka_publisher.py     # Kafka event publishing tests
-└── test_timestamp_utils.py     # Timestamp utility tests
+├── test_timestamp_utils.py     # Timestamp utility tests
+└── test_exceptions.py          # Exception handling and categorization tests
 ```
 
 ---
@@ -348,6 +349,38 @@ python -m pytest test/ -v --tb=no
 
 ---
 
+### 9. test_exceptions.py (21 tests)
+**Purpose**: Tests custom exception hierarchy and intelligent error categorization.
+
+#### TestCustomExceptions (8 tests)
+- **test_feature_store_exception**: Base exception with custom status code
+- **test_validation_error**: ValidationError with 400 status code
+- **test_not_found_error**: NotFoundError with 404 status code
+- **test_conflict_error**: ConflictError with 409 status code
+- **test_unauthorized_error**: UnauthorizedError with 401 status code
+- **test_forbidden_error**: ForbiddenError with 403 status code
+- **test_internal_server_error**: InternalServerError with 500 status code
+- **test_service_unavailable_error**: ServiceUnavailableError with 503 status code
+
+#### TestCategorizeError (11 tests)
+- **test_already_feature_store_exception**: Returns FeatureStoreException as-is
+- **test_not_found_patterns**: Categorizes "not found" errors as 404
+- **test_validation_patterns**: Categorizes validation errors as 400
+- **test_dynamodb_errors**: Categorizes DynamoDB/AWS errors as 503
+- **test_forbidden_patterns**: Categorizes permission errors as 403
+- **test_key_error**: Categorizes KeyError as ValidationError (400)
+- **test_type_error**: Categorizes TypeError as ValidationError (400)
+- **test_unknown_error**: Categorizes unknown errors as InternalServerError (500)
+- **test_case_insensitive_matching**: Tests case-insensitive pattern matching
+- **test_complex_error_messages**: Tests categorization with complex messages
+- **test_empty_error_message**: Tests handling of empty error messages
+
+#### TestErrorPriority (2 tests)
+- **test_not_allowed_is_validation**: Tests "not allowed" categorized as ValidationError
+- **test_multiple_pattern_matches**: Tests first-match-wins priority
+
+---
+
 ## Mocking Strategy
 
 ### External Dependencies Mocked
@@ -593,11 +626,11 @@ jobs:
 
 The test suite provides comprehensive coverage of the Feature Store CRUD application with:
 
-- ✅ **122 tests** across 8 test files
-- ✅ **100% pass rate** with fast execution (~3 seconds)
-- ✅ **All layers tested**: Models, Services, CRUD, Flows, Controllers, Routes
+- ✅ **138 tests** across 9 test files
+- ✅ **100% pass rate** with fast execution (~1.3 seconds)
+- ✅ **All layers tested**: Models, Services, CRUD, Flows, Controllers, Routes, Exceptions
 - ✅ **External integrations mocked**: DynamoDB, Kafka, File System
-- ✅ **Edge cases covered**: Error handling, validation, missing data
+- ✅ **Edge cases covered**: Error handling, validation, missing data, exception categorization
 - ✅ **Production ready**: Can be integrated into CI/CD pipelines
 
 The test suite ensures code quality, prevents regressions, and provides confidence for future development.
