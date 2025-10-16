@@ -160,7 +160,8 @@ class FeatureFlows:
                 entity_type=entity_type,
                 entity_value=entity_value,
                 category=category,
-                features=feature_names
+                features=feature_names,
+                compute_id=compute_id
             )
             if success:
                 logger.info(f"Published Kafka event for {entity_type}:{entity_value} category: {category}")

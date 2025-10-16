@@ -25,6 +25,7 @@ class DynamoDBSingleton:
     
     def __init__(self):
         if not self._initialized:
+            self._lock = threading.RLock()  # Instance-level lock for resource initialization
             self._dynamodb = None
             self._tables = {}
             self._initialized = True
@@ -43,16 +44,9 @@ class DynamoDBSingleton:
                         self._dynamodb = session.resource(
                             "dynamodb",
                             region_name=settings.AWS_REGION,
-                            # Connection pool configuration
                             config=boto3.session.Config(
-                                max_pool_connections=50,  # Maximum connections in pool
-                                retries={
-                                    'max_attempts': 3,
-                                    'mode': 'adaptive'
-                                },
-                                # Connection timeout settings
-                                connect_timeout=60,
-                                read_timeout=60
+                                max_pool_connections=50,
+                                retries={'max_attempts': 3, 'mode': 'adaptive'}
                             )
                         )
                         logger.info(f"DynamoDB resource created for region: {settings.AWS_REGION}")

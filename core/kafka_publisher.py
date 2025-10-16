@@ -49,7 +49,7 @@ class FeatureEventPublisher:
                 'bootstrap.servers': settings.KAFKA_BROKER_URL,
                 'schema.registry.url': settings.SCHEMA_REGISTRY,
                 'client.id': 'feature-store-api',
-                'acks': 'all',  # Wait for all replicas to acknowledge
+                'acks': 'all',
                 'retries': 3,
                 'retry.backoff.ms': 100,
                 'compression.type': 'snappy'
@@ -59,7 +59,7 @@ class FeatureEventPublisher:
                 producer_config,
                 default_value_schema=self.avro_schema
             )
-            logger.info(f"Avro producer initialized for topic: {self.topic_name} with schema registry: {settings.SCHEMA_REGISTRY}")
+            logger.info(f"Avro producer initialized for topic: {self.topic_name}")
             
         except Exception as e:
             logger.error(f"Failed to initialize Avro producer: {e}")

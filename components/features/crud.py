@@ -1,11 +1,13 @@
 from core.config import get_table
 from core.metrics import metrics, time_function, MetricNames
 from core.timestamp_utils import get_current_timestamp, ensure_timestamp_consistency
+from core.logging_config import get_logger
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 from decimal import Decimal
 from datetime import datetime
 from .models import FeatureMeta, Features
 
+logger = get_logger("feature_crud")
 deserializer = TypeDeserializer()
 serializer = TypeSerializer()
 
